@@ -9,14 +9,40 @@
       color: #fff;
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 12px;
+      padding: 10px;
     }
 
     .header {
       text-align: center;
-      font-size: 56px;
+      font-size: 60px;
       font-weight: bold;
-      margin-bottom: 18px;
+      margin: 8px 0 16px 0;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .counter {
+      background: #111;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      border: 1px solid #1f1f1f;
+    }
+
+    .counter-label {
+      font-size: 22px;
+      color: #bbb;
+      margin-bottom: 6px;
+    }
+
+    .counter-value {
+      font-size: 42px;
+      font-weight: bold;
     }
 
     .container {
@@ -29,7 +55,7 @@
       background: #111;
       border-radius: 8px;
       padding: 18px;
-      min-height: 240px;
+      min-height: 290px;
     }
 
     .section h2 {
@@ -42,16 +68,16 @@
       border-collapse: collapse;
     }
 
-    th, td {
+    td {
       text-align: left;
-      padding: 8px 6px;
-      font-size: 26px;
+      padding: 10px 8px;
+      font-size: 24px;
       border-bottom: 1px solid #222;
     }
 
     .footer {
       text-align: center;
-      margin-top: 18px;
+      margin-top: 16px;
       font-size: 22px;
       color: #bbb;
     }
@@ -61,10 +87,69 @@
       font-size: 24px;
       padding-top: 10px;
     }
+
+    /* Row colors */
+    .status-scheduled td {
+      color: #ffffff;
+    }
+
+    .status-loading td,
+    .status-unloading td {
+      background: rgba(255, 193, 7, 0.18);
+      color: #ffd54f;
+    }
+
+    .status-complete td {
+      color: #999;
+    }
+
+    .status-problem td,
+    .status-hold td {
+      background: rgba(244, 67, 54, 0.22);
+      color: #ff6b6b;
+      font-weight: bold;
+    }
+
+    .status-checkedin td {
+      background: rgba(76, 175, 80, 0.18);
+      color: #81c784;
+    }
+
+    .late td {
+      background: rgba(244, 67, 54, 0.28) !important;
+      color: #ff8a80 !important;
+      font-weight: bold;
+    }
+
+    .small-note {
+      display: block;
+      font-size: 16px;
+      color: #bbb;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
   <div class="header">FROZEN SPOT OPERATIONS</div>
+
+  <div class="topbar">
+    <div class="counter">
+      <div class="counter-label">Arriving</div>
+      <div class="counter-value" id="countArriving">0</div>
+    </div>
+    <div class="counter">
+      <div class="counter-label">Active Docks</div>
+      <div class="counter-value" id="countLoading">0</div>
+    </div>
+    <div class="counter">
+      <div class="counter-label">Departures</div>
+      <div class="counter-value" id="countDepartures">0</div>
+    </div>
+    <div class="counter">
+      <div class="counter-label">Late / Hold</div>
+      <div class="counter-value" id="countLate">0</div>
+    </div>
+  </div>
 
   <div class="container">
     <div class="section">
@@ -134,15 +219,72 @@
       return (value || "").trim();
     }
 
-    function addRow(tableId, eta, container, door) {
-      const table = document.getElementById(tableId);
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${eta}</td>
-        <td>${container}</td>
-        <td>${door ? "Door " + door : ""}</td>
+    function normalizeStatus(status) {
+      return clean(status).toLowerCase().replace(/\s+/g, "");
+    }
+
+    function parseTimeToMinutes(timeStr) {
+      const value = clean(timeStr);
+      if (!value) return null;
+
+      const match = value.match(/^(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?$/);
+      if (!match) return null;
+
+      let hour = parseInt(match[1], 10);
+      const minute = parseInt(match[2], 10);
+      const ampm = match[3] ? match[3].toUpperCase() : null;
+
+      if (ampm === "PM" && hour !== 12) hour += 12;
+      if (ampm === "AM" && hour === 12) hour = 0;
+
+      return hour * 60 + minute;
+    }
+
+    function isLate(dateStr, timeStr, status) {
+      const normalized = normalizeStatus(status);
+      if (["complete"].includes(normalized)) return false;
+
+      const rowDate = clean(dateStr);
+      if (!rowDate) return false;
+
+      const today = new Date();
+      const todayMonth = today.getMonth() + 1;
+      const todayDay = today.getDate();
+      const todayYear = today.getFullYear();
+
+      const dateMatch = rowDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (!dateMatch) return false;
+
+      const rowMonth = parseInt(dateMatch[1], 10);
+      const rowDay = parseInt(dateMatch[2], 10);
+      const rowYear = parseInt(dateMatch[3], 10);
+
+      if (
+        rowMonth !== todayMonth ||
+        rowDay !== todayDay ||
+        rowYear !== todayYear
+      ) {
+        return false;
+      }
+
+      const rowMinutes = parseTimeToMinutes(timeStr);
+      if (rowMinutes === null) return false;
+
+      const nowMinutes = today.getHours() * 60 + today.getMinutes();
+      return rowMinutes < nowMinutes;
+    }
+
+    function createRowHtml(item) {
+      const rowClass = `${item.statusClass}${item.late ? " late" : ""}`;
+      const noteHtml = item.client ? `<span class="small-note">${item.client}</span>` : "";
+
+      return `
+        <tr class="${rowClass}">
+          <td>${item.eta}</td>
+          <td>${item.container}${noteHtml}</td>
+          <td>${item.door ? "Door " + item.door : ""}</td>
+        </tr>
       `;
-      table.appendChild(tr);
     }
 
     fetch(url)
@@ -153,42 +295,80 @@
 
         const dataRows = rows.slice(1);
 
-        let arrivingCount = 0;
-        let loadingCount = 0;
-        let departureCount = 0;
+        const arriving = [];
+        const loading = [];
+        const departures = [];
+
+        let lateCount = 0;
 
         dataRows.forEach(cols => {
+          // 0 Priority
+          // 1 Date
+          // 2 ETA
+          // 3 Direction
+          // 4 Container
+          // 5 Client
+          // 6 Door
+          // 7 Status
+          // 8 Notes
+
+          const date = clean(cols[1]);
           const eta = clean(cols[2]);
           const direction = clean(cols[3]);
           const container = clean(cols[4]);
+          const client = clean(cols[5]);
           const door = clean(cols[6]);
           const status = clean(cols[7]);
 
           if (!eta && !direction && !container) return;
 
-          if (direction === "Arriving") {
-            addRow("arriving", eta, container, door);
-            arrivingCount++;
-          }
+          const statusClass = "status-" + normalizeStatus(status || "scheduled");
+          const late = isLate(date, eta, status) || ["problem", "hold"].includes(normalizeStatus(status));
 
-          if (direction === "Leaving") {
-            addRow("departures", eta, container, door);
-            departureCount++;
-          }
+          if (late) lateCount++;
 
-          if (status === "Loading" || status === "Unloading") {
-            addRow("loading", eta, container, door);
-            loadingCount++;
-          }
+          const item = {
+            date,
+            eta,
+            direction,
+            container,
+            client,
+            door,
+            status,
+            statusClass,
+            late,
+            etaMinutes: parseTimeToMinutes(eta) ?? 9999
+          };
+
+          if (direction === "Arriving") arriving.push(item);
+          if (direction === "Leaving") departures.push(item);
+          if (["loading", "unloading"].includes(normalizeStatus(status))) loading.push(item);
         });
 
-        if (arrivingCount === 0) {
+        arriving.sort((a, b) => a.etaMinutes - b.etaMinutes);
+        loading.sort((a, b) => a.etaMinutes - b.etaMinutes);
+        departures.sort((a, b) => a.etaMinutes - b.etaMinutes);
+
+        document.getElementById("countArriving").textContent = arriving.length;
+        document.getElementById("countLoading").textContent = loading.length;
+        document.getElementById("countDepartures").textContent = departures.length;
+        document.getElementById("countLate").textContent = lateCount;
+
+        const arrivingTable = document.getElementById("arriving");
+        const loadingTable = document.getElementById("loading");
+        const departuresTable = document.getElementById("departures");
+
+        arriving.forEach(item => arrivingTable.insertAdjacentHTML("beforeend", createRowHtml(item)));
+        loading.forEach(item => loadingTable.insertAdjacentHTML("beforeend", createRowHtml(item)));
+        departures.forEach(item => departuresTable.insertAdjacentHTML("beforeend", createRowHtml(item)));
+
+        if (arriving.length === 0) {
           document.getElementById("arrivingEmpty").style.display = "block";
         }
-        if (loadingCount === 0) {
+        if (loading.length === 0) {
           document.getElementById("loadingEmpty").style.display = "block";
         }
-        if (departureCount === 0) {
+        if (departures.length === 0) {
           document.getElementById("departuresEmpty").style.display = "block";
         }
       })
