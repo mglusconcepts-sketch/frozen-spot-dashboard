@@ -49,11 +49,6 @@
       border-bottom: 1px solid #222;
     }
 
-    th {
-      font-size: 20px;
-      color: #ccc;
-    }
-
     .footer {
       text-align: center;
       margin-top: 18px;
@@ -94,7 +89,7 @@
   <div class="footer">Warehouse Dashboard – Auto Refresh</div>
 
   <script>
-    const url = "PASTE_YOUR_CSV_LINK_HERE";
+    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
 
     function parseCSV(text) {
       const rows = [];
@@ -154,10 +149,8 @@
       .then(r => r.text())
       .then(text => {
         const rows = parseCSV(text);
-
         if (rows.length < 2) return;
 
-        // Row 0 = headers
         const dataRows = rows.slice(1);
 
         let arrivingCount = 0;
@@ -165,17 +158,6 @@
         let departureCount = 0;
 
         dataRows.forEach(cols => {
-          // Current sheet layout:
-          // 0 Priority
-          // 1 Date
-          // 2 ETA
-          // 3 Direction
-          // 4 Container
-          // 5 Client
-          // 6 Door
-          // 7 Status
-          // 8 Notes
-
           const eta = clean(cols[2]);
           const direction = clean(cols[3]);
           const container = clean(cols[4]);
