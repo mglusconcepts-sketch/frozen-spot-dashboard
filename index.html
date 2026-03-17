@@ -182,8 +182,8 @@
   .calendar-view{
     background:#111;
     border-radius:8px;
-    padding:6px;
-    height:calc(100vh - 120px);
+    padding:4px;
+    height:calc(100vh - 90px);
     box-sizing:border-box;
     display:flex;
     flex-direction:column;
@@ -201,12 +201,13 @@
   .month-grid{
     display:grid;
     grid-template-columns:repeat(7,1fr);
-    grid-template-rows:30px repeat(6, 1fr);
+    grid-template-rows:35px repeat(5, 1fr);
     gap:1px;
     background:#333;
     border:1px solid #333;
     flex:1 1 auto;
     min-height:0;
+    height:100%;
   }
 
   .weekday{
@@ -227,11 +228,6 @@
     position:relative;
     overflow:hidden;
     min-height:0;
-  }
-
-  .day-cell.other-month{
-    background:#e5e5e5;
-    color:#666;
   }
 
   .day-number{
@@ -496,35 +492,42 @@ function buildMonthCalendar(items){
 
   const firstOfMonth = new Date(year, month, 1);
   const lastOfMonth = new Date(year, month + 1, 0);
+  const firstDayOffset = firstOfMonth.getDay();
+  const totalDays = lastOfMonth.getDate();
+  const totalCells = totalDays + firstDayOffset;
+  const totalRows = Math.ceil(totalCells / 7);
 
   const gridStart = new Date(firstOfMonth);
-  gridStart.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
+  gridStart.setDate(firstOfMonth.getDate() - firstDayOffset);
 
   const itemsByDate = {};
   items.forEach(item => {
     if(!item.parsedDate) return;
+    if(item.parsedDate.getFullYear() !== year || item.parsedDate.getMonth() !== month) return;
+
     const key = `${item.parsedDate.getFullYear()}-${item.parsedDate.getMonth()+1}-${item.parsedDate.getDate()}`;
     if(!itemsByDate[key]) itemsByDate[key] = [];
     itemsByDate[key].push(item);
   });
 
-  for(let i=0;i<42;i++){
-    const cursor = new Date(gridStart);
-    cursor.setDate(gridStart.getDate() + i);
-
+  for(let i=0;i<totalRows * 7;i++){
     const cell = document.createElement("div");
     cell.className = "day-cell";
 
-    if(cursor.getMonth() !== month){
-      cell.classList.add("other-month");
+    const dayIndex = i - firstDayOffset + 1;
+
+    if(dayIndex < 1 || dayIndex > totalDays){
+      cell.style.background = "#111";
+      calendarGrid.appendChild(cell);
+      continue;
     }
 
     const dayNumber = document.createElement("div");
     dayNumber.className = "day-number";
-    dayNumber.textContent = cursor.getDate();
+    dayNumber.textContent = dayIndex;
     cell.appendChild(dayNumber);
 
-    const key = `${cursor.getFullYear()}-${cursor.getMonth()+1}-${cursor.getDate()}`;
+    const key = `${year}-${month+1}-${dayIndex}`;
     const dayItems = (itemsByDate[key] || []).sort((a,b)=>a.sortTime - b.sortTime);
 
     dayItems.forEach(item => {
