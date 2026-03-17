@@ -5,7 +5,6 @@
 <title>Frozen Spot Operations</title>
 
 <style>
-
 body{
 background:#000;
 color:#fff;
@@ -75,6 +74,23 @@ border-bottom:1px solid #222;
 vertical-align:top;
 }
 
+.time-block{
+line-height:1.2;
+}
+
+.time-date{
+display:block;
+font-size:16px;
+color:#bbb;
+margin-bottom:4px;
+}
+
+.time-hour{
+display:block;
+font-size:24px;
+font-weight:bold;
+}
+
 .small{
 display:block;
 font-size:16px;
@@ -112,7 +128,8 @@ color:#ff9e9e;
 font-weight:bold;
 }
 
-.status-checkedin td{
+.status-checkedin td,
+.status-checked-in td{
 background:rgba(76,175,80,.30);
 color:#b9f6ca;
 }
@@ -180,34 +197,96 @@ font-weight:bold;
 const url="https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
 
 function parseCSV(text){
-return text.split("\n").map(r=>r.split(","));
+const rows = [];
+let row = [];
+let cell = "";
+let inQuotes = false;
+
+for (let i = 0; i < text.length; i++) {
+  const char = text[i];
+  const nextChar = text[i + 1];
+
+  if (char === '"') {
+    if (inQuotes && nextChar === '"') {
+      cell += '"';
+      i++;
+    } else {
+      inQuotes = !inQuotes;
+    }
+  } else if (char === ',' && !inQuotes) {
+    row.push(cell);
+    cell = "";
+  } else if ((char === '\n' || char === '\r') && !inQuotes) {
+    if (char === '\r' && nextChar === '\n') i++;
+    row.push(cell);
+    if (row.some(c => c.trim() !== "")) rows.push(row);
+    row = [];
+    cell = "";
+  } else {
+    cell += char;
+  }
+}
+
+if (cell.length > 0 || row.length > 0) {
+  row.push(cell);
+  if (row.some(c => c.trim() !== "")) rows.push(row);
+}
+
+return rows;
 }
 
 function normalize(v){
 return (v||"").toLowerCase().trim();
 }
 
+function clean(v){
+return (v||"").trim();
+}
+
 function minutes(t){
-if(!t)return 9999;
-let p=t.split(":");
-return parseInt(p[0])*60+parseInt(p[1]);
+if(!t) return 9999;
+
+const value = clean(t);
+const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
+if(!match) return 9999;
+
+let hour = parseInt(match[1],10);
+const min = parseInt(match[2],10);
+const ampm = match[3] ? match[3].toUpperCase() : null;
+
+if(ampm==="PM" && hour!==12) hour += 12;
+if(ampm==="AM" && hour===12) hour = 0;
+
+return hour*60+min;
+}
+
+function formatDate(dateStr){
+return clean(dateStr);
+}
+
+function formatTime(timeStr){
+return clean(timeStr);
 }
 
 function isLate(date,time,status){
 
-if(normalize(status)=="complete")return false;
+if(normalize(status)=="complete") return false;
 
-let now=new Date();
+let rowDateStr = clean(date);
+if(!rowDateStr) return false;
 
-let d=date.split("/");
-let rowDate=new Date(d[2],d[0]-1,d[1]);
+let d = rowDateStr.split("/");
+if(d.length !== 3) return false;
 
-if(rowDate.toDateString()!=now.toDateString())return false;
+let rowDate = new Date(d[2], d[0]-1, d[1]);
+let now = new Date();
 
-let rowMin=minutes(time);
-let nowMin=now.getHours()*60+now.getMinutes();
+if(rowDate.toDateString() != now.toDateString()) return false;
 
-return rowMin<nowMin;
+let rowMin = minutes(time);
+let nowMin = now.getHours()*60 + now.getMinutes();
+
+return rowMin < nowMin;
 
 }
 
@@ -226,26 +305,47 @@ let lateCount=0;
 
 rows.forEach(r=>{
 
-let date=r[1];
-let eta=r[2];
-let direction=r[3];
-let cargo=r[4];
-let country=r[5];
-let container=r[6];
-let client=r[7];
-let temp=r[8];
-let door=r[9];
-let status=r[10];
+// New sheet layout:
+// 0 Priority
+// 1 Date
+// 2 ETA
+// 3 Direction
+// 4 Type of Cargo
+// 5 Country
+// 6 Container
+// 7 Client
+// 8 Temperature
+// 9 Door
+// 10 Status
+// 11 Notes
+
+let date=clean(r[1]);
+let eta=clean(r[2]);
+let direction=clean(r[3]);
+let cargo=clean(r[4]);
+let country=clean(r[5]);
+let container=clean(r[6]);
+let client=clean(r[7]);
+let temp=clean(r[8]);
+let door=clean(r[9]);
+let status=clean(r[10]);
 
 let norm=normalize(status);
 
+if(!date && !eta && !direction && !container) return;
+
 let late=isLate(date,eta,status)||norm.includes("hold")||norm.includes("problem");
 
-if(late)lateCount++;
+if(late) lateCount++;
 
 let row=`
 <tr class="status-${norm} ${late?'late':''}">
-<td>${eta}</td>
+<td>
+  <div class="time-block">
+    <span class="time-date">${formatDate(date)}</span>
+    <span class="time-hour">${formatTime(eta)}</span>
+  </div>
+</td>
 <td>
 ${container}
 <span class="small">${client}</span>
@@ -255,17 +355,26 @@ ${container}
 </tr>
 `;
 
-if(direction=="Arriving")arriving.push(row);
-if(direction=="Leaving")departures.push(row);
+let item={
+row:row,
+sortMinutes:minutes(eta)
+};
+
+if(direction=="Arriving") arriving.push(item);
+if(direction=="Leaving") departures.push(item);
 
 if(norm.includes("loading")||norm.includes("unloading"))
-loading.push(row);
+loading.push(item);
 
 });
 
-arriving.forEach(r=>document.getElementById("arriving").innerHTML+=r);
-loading.forEach(r=>document.getElementById("loading").innerHTML+=r);
-departures.forEach(r=>document.getElementById("departures").innerHTML+=r);
+arriving.sort((a,b)=>a.sortMinutes-b.sortMinutes);
+loading.sort((a,b)=>a.sortMinutes-b.sortMinutes);
+departures.sort((a,b)=>a.sortMinutes-b.sortMinutes);
+
+arriving.forEach(x=>document.getElementById("arriving").innerHTML+=x.row);
+loading.forEach(x=>document.getElementById("loading").innerHTML+=x.row);
+departures.forEach(x=>document.getElementById("departures").innerHTML+=x.row);
 
 document.getElementById("countArriving").innerText=arriving.length;
 document.getElementById("countLoading").innerText=loading.length;
