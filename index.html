@@ -6,207 +6,237 @@
 
 <style>
 body{
-background:#000;
-color:#fff;
-font-family:Arial,sans-serif;
-margin:0;
-padding:10px;
+  background:#000;
+  color:#fff;
+  font-family:Arial,sans-serif;
+  margin:0;
+  padding:10px;
 }
 
 .header{
-text-align:center;
-font-size:60px;
-font-weight:bold;
-margin-bottom:15px;
+  text-align:center;
+  font-size:60px;
+  font-weight:bold;
+  margin-bottom:15px;
 }
 
 .topbar{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:14px;
-margin-bottom:14px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:14px;
 }
 
 .counter{
-background:#111;
-border-radius:8px;
-padding:14px;
-text-align:center;
+  background:#111;
+  border-radius:8px;
+  padding:14px;
+  text-align:center;
 }
 
 .counter-label{
-font-size:20px;
-color:#bbb;
+  font-size:20px;
+  color:#bbb;
 }
 
 .counter-value{
-font-size:42px;
-font-weight:bold;
+  font-size:42px;
+  font-weight:bold;
 }
 
 .view-toggle{
-display:flex;
-justify-content:center;
-gap:12px;
-margin-bottom:16px;
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:16px;
 }
 
 .toggle-btn{
-background:#111;
-color:#fff;
-border:1px solid #333;
-border-radius:8px;
-padding:10px 18px;
-font-size:18px;
-cursor:pointer;
+  background:#111;
+  color:#fff;
+  border:1px solid #333;
+  border-radius:8px;
+  padding:10px 18px;
+  font-size:18px;
+  cursor:pointer;
 }
 
 .toggle-btn.active{
-background:#1f1f1f;
-border-color:#666;
+  background:#1f1f1f;
+  border-color:#666;
 }
 
 .container{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-gap:18px;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:18px;
 }
 
 .section{
-background:#111;
-border-radius:8px;
-padding:18px;
-min-height:320px;
+  background:#111;
+  border-radius:8px;
+  padding:18px;
+  min-height:320px;
 }
 
 .section h2{
-font-size:34px;
-margin-bottom:14px;
+  font-size:34px;
+  margin-bottom:14px;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
+  width:100%;
+  border-collapse:collapse;
 }
 
 td{
-padding:10px;
-font-size:24px;
-border-bottom:1px solid #222;
-vertical-align:top;
+  padding:10px;
+  font-size:24px;
+  border-bottom:1px solid #222;
+  vertical-align:top;
 }
 
 .time-block{
-line-height:1.2;
+  line-height:1.2;
 }
 
 .time-date{
-display:block;
-font-size:16px;
-color:#bbb;
-margin-bottom:4px;
+  display:block;
+  font-size:16px;
+  color:#bbb;
+  margin-bottom:4px;
 }
 
 .time-hour{
-display:block;
-font-size:24px;
-font-weight:bold;
+  display:block;
+  font-size:24px;
+  font-weight:bold;
 }
 
 .small{
-display:block;
-font-size:16px;
-color:#bbb;
-margin-top:3px;
+  display:block;
+  font-size:16px;
+  color:#bbb;
+  margin-top:3px;
 }
 
 .footer{
-text-align:center;
-margin-top:16px;
-font-size:22px;
-color:#bbb;
+  text-align:center;
+  margin-top:16px;
+  font-size:22px;
+  color:#bbb;
 }
 
+/* Month calendar */
 .calendar-view{
-display:none;
-background:#111;
-border-radius:8px;
-padding:18px;
-min-height:320px;
+  display:none;
+  background:#111;
+  border-radius:8px;
+  padding:18px;
+  min-height:320px;
 }
 
-.calendar-day{
-margin-bottom:24px;
-padding-bottom:18px;
-border-bottom:1px solid #222;
+.calendar-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
 }
 
-.calendar-day h3{
-font-size:28px;
-margin:0 0 12px 0;
-color:#fff;
+.calendar-title{
+  font-size:34px;
+  font-weight:bold;
 }
 
-.calendar-item{
-padding:12px 10px;
-border-radius:6px;
-margin-bottom:10px;
-background:#0d0d0d;
-border:1px solid #1c1c1c;
+.calendar-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
 }
 
-.calendar-time{
-font-size:24px;
-font-weight:bold;
+.calendar-weekday{
+  text-align:center;
+  font-size:18px;
+  color:#bbb;
+  padding:8px 0;
+  background:#0c0c0c;
+  border-radius:6px;
 }
 
-.calendar-main{
-font-size:24px;
-margin-top:4px;
+.calendar-cell{
+  background:#0d0d0d;
+  border:1px solid #222;
+  border-radius:8px;
+  min-height:120px;
+  padding:8px;
+  display:flex;
+  flex-direction:column;
 }
 
-.calendar-sub{
-font-size:16px;
-color:#bbb;
-margin-top:4px;
+.calendar-cell.empty{
+  background:#080808;
+  border-color:#111;
 }
 
-/* status colors */
+.calendar-day-number{
+  font-size:18px;
+  font-weight:bold;
+  margin-bottom:6px;
+  color:#fff;
+}
+
+.calendar-event{
+  font-size:14px;
+  line-height:1.2;
+  border-radius:6px;
+  padding:5px 6px;
+  margin-bottom:5px;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-weight:bold;
+}
+
+.event-in{
+  background:rgba(211,47,47,.28);
+  color:#ffb3b3;
+  border:1px solid rgba(211,47,47,.55);
+}
+
+.event-out{
+  background:rgba(25,118,210,.28);
+  color:#b8d8ff;
+  border:1px solid rgba(25,118,210,.55);
+}
+
+/* status colors for board */
 .status-loading td,
-.status-unloading td,
-.calendar-item.status-loading,
-.calendar-item.status-unloading{
-background:rgba(255,193,7,.30);
-color:#ffe082;
+.status-unloading td{
+  background:rgba(255,193,7,.30);
+  color:#ffe082;
 }
 
-.status-complete td,
-.calendar-item.status-complete{
-color:#888;
+.status-complete td{
+  color:#888;
 }
 
 .status-hold td,
-.status-problem td,
-.calendar-item.status-hold,
-.calendar-item.status-problem{
-background:rgba(244,67,54,.35);
-color:#ff9e9e;
-font-weight:bold;
+.status-problem td{
+  background:rgba(244,67,54,.35);
+  color:#ff9e9e;
+  font-weight:bold;
 }
 
 .status-checkedin td,
-.status-checked-in td,
-.calendar-item.status-checkedin,
-.calendar-item.status-checked-in{
-background:rgba(76,175,80,.30);
-color:#b9f6ca;
+.status-checked-in td{
+  background:rgba(76,175,80,.30);
+  color:#b9f6ca;
 }
 
-.late td,
-.calendar-item.late{
-background:rgba(211,47,47,.45)!important;
-color:#ffd0d0!important;
-font-weight:bold;
+.late td{
+  background:rgba(211,47,47,.45)!important;
+  color:#ffd0d0!important;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -257,8 +287,10 @@ font-weight:bold;
 </div>
 
 <div id="calendarView" class="calendar-view">
-  <h2 style="font-size:34px;margin-top:0;">CALENDAR VIEW</h2>
-  <div id="calendarContent"></div>
+  <div class="calendar-toolbar">
+    <div id="calendarTitle" class="calendar-title">Month View</div>
+  </div>
+  <div id="calendarGrid"></div>
 </div>
 
 <div class="footer">Warehouse Dashboard – Auto Refresh</div>
@@ -319,12 +351,12 @@ function parseCSV(text){
   return rows;
 }
 
-function normalize(v){
-  return (v||"").toLowerCase().trim();
-}
-
 function clean(v){
   return (v||"").trim();
+}
+
+function normalize(v){
+  return clean(v).toLowerCase();
 }
 
 function parseDate(dateStr){
@@ -351,27 +383,31 @@ function minutes(t){
   return hour*60+min;
 }
 
-function isLate(date,time,status){
-  if(normalize(status)=="complete") return false;
+function formatBoardDate(dateStr){
+  const d = parseDate(dateStr);
+  if(!d) return clean(dateStr);
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+}
 
-  let rowDate = parseDate(date);
+function isLate(date,time,status){
+  if(normalize(status)==="complete") return false;
+
+  const rowDate = parseDate(date);
   if(!rowDate) return false;
 
-  let now = new Date();
-  if(rowDate.toDateString() != now.toDateString()) return false;
+  const now = new Date();
+  if(rowDate.toDateString() !== now.toDateString()) return false;
 
-  let rowMin = minutes(time);
-  let nowMin = now.getHours()*60 + now.getMinutes();
-
-  return rowMin < nowMin;
+  return minutes(time) < (now.getHours()*60 + now.getMinutes());
 }
 
 function createBoardRow(item){
   return `
-  <tr class="status-${item.norm} ${item.late?'late':''}">
+  <tr class="status-${item.norm} ${item.late ? 'late' : ''}">
     <td>
       <div class="time-block">
-        <span class="time-date">${item.date}</span>
+        <span class="time-date">${formatBoardDate(item.date)}</span>
         <span class="time-hour">${item.eta}</span>
       </div>
     </td>
@@ -385,33 +421,97 @@ function createBoardRow(item){
   `;
 }
 
-function createCalendarItem(item){
-  return `
-  <div class="calendar-item status-${item.norm} ${item.late?'late':''}">
-    <div class="calendar-time">${item.eta}</div>
-    <div class="calendar-main">${item.direction} • ${item.container} • Door ${item.door}</div>
-    <div class="calendar-sub">${item.client}</div>
-    <div class="calendar-sub">${item.cargo} • ${item.country} • ${item.temp} • ${item.status}</div>
-  </div>
-  `;
+function monthName(monthIndex){
+  const months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+  return months[monthIndex];
+}
+
+function buildMonthGrid(items){
+  const grid = document.getElementById("calendarGrid");
+  grid.innerHTML = "";
+
+  if(items.length === 0){
+    document.getElementById("calendarTitle").textContent = "No Calendar Data";
+    return;
+  }
+
+  const sortedItems = [...items].sort((a,b)=>{
+    if(a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
+    return a.sortTime - b.sortTime;
+  });
+
+  const firstDate = sortedItems[0].parsedDate || new Date();
+  const year = firstDate.getFullYear();
+  const month = firstDate.getMonth();
+
+  document.getElementById("calendarTitle").textContent = `${monthName(month)} ${year}`;
+
+  const weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  weekdays.forEach(day=>{
+    const el = document.createElement("div");
+    el.className = "calendar-weekday";
+    el.textContent = day;
+    grid.appendChild(el);
+  });
+
+  const firstOfMonth = new Date(year, month, 1);
+  const startDay = firstOfMonth.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const itemsByDay = {};
+  sortedItems.forEach(item=>{
+    if(!item.parsedDate) return;
+    if(item.parsedDate.getFullYear() !== year || item.parsedDate.getMonth() !== month) return;
+
+    const dayNum = item.parsedDate.getDate();
+    if(!itemsByDay[dayNum]) itemsByDay[dayNum] = [];
+    itemsByDay[dayNum].push(item);
+  });
+
+  for(let i=0;i<startDay;i++){
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "calendar-cell empty";
+    grid.appendChild(emptyCell);
+  }
+
+  for(let day=1; day<=daysInMonth; day++){
+    const cell = document.createElement("div");
+    cell.className = "calendar-cell";
+
+    const dayNum = document.createElement("div");
+    dayNum.className = "calendar-day-number";
+    dayNum.textContent = day;
+    cell.appendChild(dayNum);
+
+    const dayItems = itemsByDay[day] || [];
+    dayItems.forEach(item=>{
+      const event = document.createElement("div");
+      const isIn = item.direction === "Arriving";
+      event.className = "calendar-event " + (isIn ? "event-in" : "event-out");
+      event.textContent = `${item.client}-${isIn ? "IN" : "OUT"}`;
+      cell.appendChild(event);
+    });
+
+    grid.appendChild(cell);
+  }
 }
 
 fetch(url)
 .then(r=>r.text())
 .then(text=>{
-
-  let rows=parseCSV(text);
+  let rows = parseCSV(text);
   rows.shift();
 
-  let arriving=[];
-  let loading=[];
-  let departures=[];
-  let allItems=[];
-
-  let lateCount=0;
+  let arriving = [];
+  let loading = [];
+  let departures = [];
+  let allItems = [];
+  let lateCount = 0;
 
   rows.forEach(r=>{
-
     // 0 Priority
     // 1 Date
     // 2 ETA
@@ -425,27 +525,26 @@ fetch(url)
     // 10 Status
     // 11 Notes
 
-    let date=clean(r[1]);
-    let eta=clean(r[2]);
-    let direction=clean(r[3]);
-    let cargo=clean(r[4]);
-    let country=clean(r[5]);
-    let container=clean(r[6]);
-    let client=clean(r[7]);
-    let temp=clean(r[8]);
-    let door=clean(r[9]);
-    let status=clean(r[10]);
-
-    let norm=normalize(status);
+    const date = clean(r[1]);
+    const eta = clean(r[2]);
+    const direction = clean(r[3]);
+    const cargo = clean(r[4]);
+    const country = clean(r[5]);
+    const container = clean(r[6]);
+    const client = clean(r[7]);
+    const temp = clean(r[8]);
+    const door = clean(r[9]);
+    const status = clean(r[10]);
 
     if(!date && !eta && !direction && !container) return;
 
-    let late=isLate(date,eta,status)||norm.includes("hold")||norm.includes("problem");
+    const norm = normalize(status);
+    const parsedDate = parseDate(date);
+    const late = isLate(date,eta,status) || norm.includes("hold") || norm.includes("problem");
+
     if(late) lateCount++;
 
-    let parsedDate=parseDate(date);
-
-    let item={
+    const item = {
       date,
       eta,
       direction,
@@ -465,13 +564,12 @@ fetch(url)
 
     allItems.push(item);
 
-    if(direction=="Arriving") arriving.push(item);
-    if(direction=="Leaving") departures.push(item);
-    if(norm.includes("loading")||norm.includes("unloading")) loading.push(item);
+    if(direction === "Arriving") arriving.push(item);
+    if(direction === "Leaving") departures.push(item);
+    if(norm.includes("loading") || norm.includes("unloading")) loading.push(item);
   });
 
-  // ascending date, then ascending time
-  const sorter = (a,b) => {
+  const sorter = (a,b)=>{
     if(a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
     return a.sortTime - b.sortTime;
   };
@@ -481,42 +579,27 @@ fetch(url)
   departures.sort(sorter);
   allItems.sort(sorter);
 
-  arriving.forEach(x=>document.getElementById("arriving").innerHTML += createBoardRow(x));
-  loading.forEach(x=>document.getElementById("loading").innerHTML += createBoardRow(x));
-  departures.forEach(x=>document.getElementById("departures").innerHTML += createBoardRow(x));
-
-  document.getElementById("countArriving").innerText=arriving.length;
-  document.getElementById("countLoading").innerText=loading.length;
-  document.getElementById("countDepartures").innerText=departures.length;
-  document.getElementById("countLate").innerText=lateCount;
-
-  // calendar view grouped by date
-  let grouped = {};
-  allItems.forEach(item=>{
-    if(!grouped[item.date]) grouped[item.date] = [];
-    grouped[item.date].push(item);
+  arriving.forEach(x=>{
+    document.getElementById("arriving").innerHTML += createBoardRow(x);
   });
 
-  const calendarContent = document.getElementById("calendarContent");
-  Object.keys(grouped)
-    .sort((a,b)=>{
-      const da=parseDate(a);
-      const db=parseDate(b);
-      return da - db;
-    })
-    .forEach(date=>{
-      let block = `<div class="calendar-day"><h3>${date}</h3>`;
-      grouped[date].forEach(item=>{
-        block += createCalendarItem(item);
-      });
-      block += `</div>`;
-      calendarContent.innerHTML += block;
-    });
+  loading.forEach(x=>{
+    document.getElementById("loading").innerHTML += createBoardRow(x);
+  });
 
+  departures.forEach(x=>{
+    document.getElementById("departures").innerHTML += createBoardRow(x);
+  });
+
+  document.getElementById("countArriving").innerText = arriving.length;
+  document.getElementById("countLoading").innerText = loading.length;
+  document.getElementById("countDepartures").innerText = departures.length;
+  document.getElementById("countLate").innerText = lateCount;
+
+  buildMonthGrid(allItems);
 });
 
 setTimeout(()=>location.reload(),15000);
-
 </script>
 
 </body>
