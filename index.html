@@ -1,246 +1,221 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Frozen Spot Operations</title>
-
 <style>
-body{
-  background:#000;
-  color:#fff;
-  font-family:Arial,sans-serif;
-  margin:0;
-  padding:10px;
-}
+  body{
+    background:#000;
+    color:#fff;
+    font-family:Arial,sans-serif;
+    margin:0;
+    padding:10px;
+  }
 
-.header{
-  text-align:center;
-  font-size:60px;
-  font-weight:bold;
-  margin-bottom:15px;
-}
+  .header{
+    text-align:center;
+    font-size:58px;
+    font-weight:bold;
+    margin:6px 0 14px 0;
+  }
 
-.topbar{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:14px;
-  margin-bottom:14px;
-}
+  .topbar{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:14px;
+  }
 
-.counter{
-  background:#111;
-  border-radius:8px;
-  padding:14px;
-  text-align:center;
-}
+  .counter{
+    background:#111;
+    border-radius:8px;
+    padding:14px;
+    text-align:center;
+  }
 
-.counter-label{
-  font-size:20px;
-  color:#bbb;
-}
+  .counter-label{
+    font-size:20px;
+    color:#bbb;
+  }
 
-.counter-value{
-  font-size:42px;
-  font-weight:bold;
-}
+  .counter-value{
+    font-size:42px;
+    font-weight:bold;
+  }
 
-.view-toggle{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin-bottom:16px;
-}
+  .container{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:18px;
+  }
 
-.toggle-btn{
-  background:#111;
-  color:#fff;
-  border:1px solid #333;
-  border-radius:8px;
-  padding:10px 18px;
-  font-size:18px;
-  cursor:pointer;
-}
+  .section{
+    background:#111;
+    border-radius:8px;
+    padding:18px;
+    min-height:330px;
+  }
 
-.toggle-btn.active{
-  background:#1f1f1f;
-  border-color:#666;
-}
+  .section h2{
+    font-size:34px;
+    margin:0 0 14px 0;
+  }
 
-.container{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:18px;
-}
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
 
-.section{
-  background:#111;
-  border-radius:8px;
-  padding:18px;
-  min-height:320px;
-}
+  td{
+    padding:10px;
+    font-size:22px;
+    border-bottom:1px solid #222;
+    vertical-align:top;
+  }
 
-.section h2{
-  font-size:34px;
-  margin-bottom:14px;
-}
+  .time-block{
+    line-height:1.2;
+  }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-}
+  .time-date{
+    display:block;
+    font-size:15px;
+    color:#bbb;
+    margin-bottom:4px;
+  }
 
-td{
-  padding:10px;
-  font-size:24px;
-  border-bottom:1px solid #222;
-  vertical-align:top;
-}
+  .time-hour{
+    display:block;
+    font-size:22px;
+    font-weight:bold;
+  }
 
-.time-block{
-  line-height:1.2;
-}
+  .small{
+    display:block;
+    font-size:15px;
+    color:#bbb;
+    margin-top:3px;
+    line-height:1.25;
+  }
 
-.time-date{
-  display:block;
-  font-size:16px;
-  color:#bbb;
-  margin-bottom:4px;
-}
+  .footer{
+    text-align:center;
+    margin-top:14px;
+    font-size:22px;
+    color:#bbb;
+  }
 
-.time-hour{
-  display:block;
-  font-size:24px;
-  font-weight:bold;
-}
+  .hidden{
+    display:none !important;
+  }
 
-.small{
-  display:block;
-  font-size:16px;
-  color:#bbb;
-  margin-top:3px;
-}
+  /* Board colors */
+  .status-loading td,
+  .status-unloading td{
+    background:rgba(255,193,7,.30);
+    color:#ffe082;
+  }
 
-.footer{
-  text-align:center;
-  margin-top:16px;
-  font-size:22px;
-  color:#bbb;
-}
+  .status-complete td{
+    color:#888;
+  }
 
-/* Month calendar */
-.calendar-view{
-  display:none;
-  background:#111;
-  border-radius:8px;
-  padding:18px;
-  min-height:320px;
-}
+  .status-hold td,
+  .status-problem td{
+    background:rgba(244,67,54,.35);
+    color:#ffb3b3;
+    font-weight:bold;
+  }
 
-.calendar-toolbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:14px;
-}
+  .status-checkedin td,
+  .status-checked-in td{
+    background:rgba(76,175,80,.30);
+    color:#b9f6ca;
+  }
 
-.calendar-title{
-  font-size:34px;
-  font-weight:bold;
-}
+  .late td{
+    background:rgba(211,47,47,.45)!important;
+    color:#ffd0d0!important;
+    font-weight:bold;
+  }
 
-.calendar-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:8px;
-}
+  /* Calendar month view */
+  .calendar-view{
+    background:#111;
+    border-radius:8px;
+    padding:14px;
+    min-height:640px;
+  }
 
-.calendar-weekday{
-  text-align:center;
-  font-size:18px;
-  color:#bbb;
-  padding:8px 0;
-  background:#0c0c0c;
-  border-radius:6px;
-}
+  .calendar-header{
+    text-align:center;
+    font-size:34px;
+    font-weight:bold;
+    margin-bottom:10px;
+  }
 
-.calendar-cell{
-  background:#0d0d0d;
-  border:1px solid #222;
-  border-radius:8px;
-  min-height:120px;
-  padding:8px;
-  display:flex;
-  flex-direction:column;
-}
+  .month-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:1px;
+    background:#333;
+    border:1px solid #333;
+  }
 
-.calendar-cell.empty{
-  background:#080808;
-  border-color:#111;
-}
+  .weekday{
+    background:#1a1a1a;
+    color:#fff;
+    padding:8px 6px;
+    font-size:18px;
+    font-weight:bold;
+    min-height:34px;
+  }
 
-.calendar-day-number{
-  font-size:18px;
-  font-weight:bold;
-  margin-bottom:6px;
-  color:#fff;
-}
+  .day-cell{
+    background:#f3f3f3;
+    color:#000;
+    min-height:140px;
+    padding:4px;
+    position:relative;
+    overflow:hidden;
+  }
 
-.calendar-event{
-  font-size:14px;
-  line-height:1.2;
-  border-radius:6px;
-  padding:5px 6px;
-  margin-bottom:5px;
-  overflow:hidden;
-  white-space:nowrap;
-  text-overflow:ellipsis;
-  font-weight:bold;
-}
+  .day-cell.other-month{
+    background:#e5e5e5;
+    color:#666;
+  }
 
-.event-in{
-  background:rgba(211,47,47,.28);
-  color:#ffb3b3;
-  border:1px solid rgba(211,47,47,.55);
-}
+  .day-number{
+    font-size:16px;
+    font-weight:bold;
+    margin-bottom:4px;
+  }
 
-.event-out{
-  background:rgba(25,118,210,.28);
-  color:#b8d8ff;
-  border:1px solid rgba(25,118,210,.55);
-}
+  .event-chip{
+    font-size:12px;
+    line-height:1.15;
+    margin:2px 0;
+    padding:3px 4px;
+    border-left:3px solid transparent;
+    border-radius:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
 
-/* status colors for board */
-.status-loading td,
-.status-unloading td{
-  background:rgba(255,193,7,.30);
-  color:#ffe082;
-}
+  .event-in{
+    background:#f7c7c7;
+    border-left-color:#c62828;
+    color:#000;
+  }
 
-.status-complete td{
-  color:#888;
-}
-
-.status-hold td,
-.status-problem td{
-  background:rgba(244,67,54,.35);
-  color:#ff9e9e;
-  font-weight:bold;
-}
-
-.status-checkedin td,
-.status-checked-in td{
-  background:rgba(76,175,80,.30);
-  color:#b9f6ca;
-}
-
-.late td{
-  background:rgba(211,47,47,.45)!important;
-  color:#ffd0d0!important;
-  font-weight:bold;
-}
+  .event-out{
+    background:#bbdefb;
+    border-left-color:#1565c0;
+    color:#000;
+  }
 </style>
 </head>
-
 <body>
 
 <div class="header">FROZEN SPOT OPERATIONS</div>
@@ -264,11 +239,6 @@ td{
   </div>
 </div>
 
-<div class="view-toggle">
-  <button id="boardBtn" class="toggle-btn active" onclick="showBoardView()">Board View</button>
-  <button id="calendarBtn" class="toggle-btn" onclick="showCalendarView()">Calendar View</button>
-</div>
-
 <div id="boardView" class="container">
   <div class="section">
     <h2>ARRIVING</h2>
@@ -286,31 +256,18 @@ td{
   </div>
 </div>
 
-<div id="calendarView" class="calendar-view">
-  <div class="calendar-toolbar">
-    <div id="calendarTitle" class="calendar-title">Month View</div>
-  </div>
-  <div id="calendarGrid"></div>
+<div id="calendarView" class="calendar-view hidden">
+  <div id="calendarHeader" class="calendar-header"></div>
+  <div id="calendarGrid" class="month-grid"></div>
 </div>
 
 <div class="footer">Warehouse Dashboard – Auto Refresh</div>
 
 <script>
-const url="https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
 
-function showBoardView(){
-  document.getElementById("boardView").style.display="grid";
-  document.getElementById("calendarView").style.display="none";
-  document.getElementById("boardBtn").classList.add("active");
-  document.getElementById("calendarBtn").classList.remove("active");
-}
-
-function showCalendarView(){
-  document.getElementById("boardView").style.display="none";
-  document.getElementById("calendarView").style.display="block";
-  document.getElementById("calendarBtn").classList.add("active");
-  document.getElementById("boardBtn").classList.remove("active");
-}
+const BOARD_SECONDS = 20;
+const CALENDAR_SECONDS = 12;
 
 function parseCSV(text){
   const rows = [];
@@ -318,24 +275,24 @@ function parseCSV(text){
   let cell = "";
   let inQuotes = false;
 
-  for (let i = 0; i < text.length; i++) {
+  for(let i=0;i<text.length;i++){
     const char = text[i];
-    const nextChar = text[i + 1];
+    const nextChar = text[i+1];
 
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
+    if(char === '"'){
+      if(inQuotes && nextChar === '"'){
         cell += '"';
         i++;
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (char === ',' && !inQuotes) {
+    } else if(char === ',' && !inQuotes){
       row.push(cell);
       cell = "";
-    } else if ((char === '\n' || char === '\r') && !inQuotes) {
-      if (char === '\r' && nextChar === '\n') i++;
+    } else if((char === '\n' || char === '\r') && !inQuotes){
+      if(char === '\r' && nextChar === '\n') i++;
       row.push(cell);
-      if (row.some(c => c.trim() !== "")) rows.push(row);
+      if(row.some(c => c.trim() !== "")) rows.push(row);
       row = [];
       cell = "";
     } else {
@@ -343,44 +300,44 @@ function parseCSV(text){
     }
   }
 
-  if (cell.length > 0 || row.length > 0) {
+  if(cell.length > 0 || row.length > 0){
     row.push(cell);
-    if (row.some(c => c.trim() !== "")) rows.push(row);
+    if(row.some(c => c.trim() !== "")) rows.push(row);
   }
 
   return rows;
 }
 
 function clean(v){
-  return (v||"").trim();
+  return (v || "").trim();
 }
 
 function normalize(v){
-  return clean(v).toLowerCase();
+  return clean(v).toLowerCase().replace(/\s+/g, "");
 }
 
 function parseDate(dateStr){
   const value = clean(dateStr);
   const parts = value.split("/");
   if(parts.length !== 3) return null;
-  return new Date(parts[2], parts[0]-1, parts[1]);
+  return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
 }
 
-function minutes(t){
-  if(!t) return 9999;
-
+function parseTimeMinutes(t){
   const value = clean(t);
+  if(!value) return 9999;
+
   const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
   if(!match) return 9999;
 
   let hour = parseInt(match[1],10);
-  const min = parseInt(match[2],10);
+  const minute = parseInt(match[2],10);
   const ampm = match[3] ? match[3].toUpperCase() : null;
 
-  if(ampm==="PM" && hour!==12) hour += 12;
-  if(ampm==="AM" && hour===12) hour = 0;
+  if(ampm === "PM" && hour !== 12) hour += 12;
+  if(ampm === "AM" && hour === 12) hour = 0;
 
-  return hour*60+min;
+  return hour * 60 + minute;
 }
 
 function formatBoardDate(dateStr){
@@ -390,216 +347,280 @@ function formatBoardDate(dateStr){
   return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
 }
 
-function isLate(date,time,status){
-  if(normalize(status)==="complete") return false;
+function isLate(dateStr, timeStr, status){
+  const normalized = normalize(status);
+  if(normalized === "complete") return false;
 
-  const rowDate = parseDate(date);
+  const rowDate = parseDate(dateStr);
   if(!rowDate) return false;
 
   const now = new Date();
   if(rowDate.toDateString() !== now.toDateString()) return false;
 
-  return minutes(time) < (now.getHours()*60 + now.getMinutes());
+  const rowMins = parseTimeMinutes(timeStr);
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+
+  return rowMins < nowMins;
+}
+
+function getWeekStart(d){
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = date.getDay();
+  date.setDate(date.getDate() - day);
+  date.setHours(0,0,0,0);
+  return date;
+}
+
+function getWeekEnd(d){
+  const start = getWeekStart(d);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23,59,59,999);
+  return end;
+}
+
+function isInCurrentWeek(dateObj){
+  if(!dateObj) return false;
+  const now = new Date();
+  const start = getWeekStart(now);
+  const end = getWeekEnd(now);
+  return dateObj >= start && dateObj <= end;
 }
 
 function createBoardRow(item){
   return `
-  <tr class="status-${item.norm} ${item.late ? 'late' : ''}">
-    <td>
-      <div class="time-block">
-        <span class="time-date">${formatBoardDate(item.date)}</span>
-        <span class="time-hour">${item.eta}</span>
-      </div>
-    </td>
-    <td>
-      ${item.container}
-      <span class="small">${item.client}</span>
-      <span class="small">${item.cargo} • ${item.country} • ${item.temp}</span>
-    </td>
-    <td>Door ${item.door}</td>
-  </tr>
+    <tr class="status-${item.norm} ${item.late ? "late" : ""}">
+      <td>
+        <div class="time-block">
+          <span class="time-date">${formatBoardDate(item.date)}</span>
+          <span class="time-hour">${item.eta}</span>
+        </div>
+      </td>
+      <td>
+        ${item.container}
+        <span class="small">${item.client}</span>
+        <span class="small">${item.cargo} • ${item.country} • ${item.temp}</span>
+      </td>
+      <td>Door ${item.door}</td>
+    </tr>
   `;
 }
 
-function monthName(monthIndex){
-  const months = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
-  ];
-  return months[monthIndex];
-}
-
-function buildMonthGrid(items){
-  const grid = document.getElementById("calendarGrid");
-  grid.innerHTML = "";
+function buildMonthCalendar(items){
+  const calendarGrid = document.getElementById("calendarGrid");
+  const calendarHeader = document.getElementById("calendarHeader");
+  calendarGrid.innerHTML = "";
 
   if(items.length === 0){
-    document.getElementById("calendarTitle").textContent = "No Calendar Data";
+    calendarHeader.textContent = "No Calendar Data";
     return;
   }
 
-  const sortedItems = [...items].sort((a,b)=>{
+  const sorted = [...items].sort((a,b)=>{
     if(a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
     return a.sortTime - b.sortTime;
   });
 
-  const firstDate = sortedItems[0].parsedDate || new Date();
-  const year = firstDate.getFullYear();
-  const month = firstDate.getMonth();
+  const monthDate = sorted[0].parsedDate || new Date();
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
 
-  document.getElementById("calendarTitle").textContent = `${monthName(month)} ${year}`;
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  calendarHeader.textContent = `${monthNames[month]} ${year}`;
 
-  const weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  weekdays.forEach(day=>{
+  const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  weekdays.forEach(day => {
     const el = document.createElement("div");
-    el.className = "calendar-weekday";
+    el.className = "weekday";
     el.textContent = day;
-    grid.appendChild(el);
+    calendarGrid.appendChild(el);
   });
 
   const firstOfMonth = new Date(year, month, 1);
-  const startDay = firstOfMonth.getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const lastOfMonth = new Date(year, month + 1, 0);
 
-  const itemsByDay = {};
-  sortedItems.forEach(item=>{
+  const gridStart = new Date(firstOfMonth);
+  gridStart.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
+
+  const gridEnd = new Date(lastOfMonth);
+  gridEnd.setDate(lastOfMonth.getDate() + (6 - lastOfMonth.getDay()));
+
+  const itemsByDate = {};
+  items.forEach(item => {
     if(!item.parsedDate) return;
-    if(item.parsedDate.getFullYear() !== year || item.parsedDate.getMonth() !== month) return;
-
-    const dayNum = item.parsedDate.getDate();
-    if(!itemsByDay[dayNum]) itemsByDay[dayNum] = [];
-    itemsByDay[dayNum].push(item);
+    const key = `${item.parsedDate.getFullYear()}-${item.parsedDate.getMonth()+1}-${item.parsedDate.getDate()}`;
+    if(!itemsByDate[key]) itemsByDate[key] = [];
+    itemsByDate[key].push(item);
   });
 
-  for(let i=0;i<startDay;i++){
-    const emptyCell = document.createElement("div");
-    emptyCell.className = "calendar-cell empty";
-    grid.appendChild(emptyCell);
-  }
-
-  for(let day=1; day<=daysInMonth; day++){
+  let cursor = new Date(gridStart);
+  while(cursor <= gridEnd){
     const cell = document.createElement("div");
-    cell.className = "calendar-cell";
+    cell.className = "day-cell";
 
-    const dayNum = document.createElement("div");
-    dayNum.className = "calendar-day-number";
-    dayNum.textContent = day;
-    cell.appendChild(dayNum);
+    if(cursor.getMonth() !== month){
+      cell.classList.add("other-month");
+    }
 
-    const dayItems = itemsByDay[day] || [];
-    dayItems.forEach(item=>{
-      const event = document.createElement("div");
+    const dayNumber = document.createElement("div");
+    dayNumber.className = "day-number";
+    dayNumber.textContent = cursor.getDate();
+    cell.appendChild(dayNumber);
+
+    const key = `${cursor.getFullYear()}-${cursor.getMonth()+1}-${cursor.getDate()}`;
+    const dayItems = (itemsByDate[key] || []).sort((a,b)=>a.sortTime - b.sortTime);
+
+    dayItems.forEach(item => {
+      const chip = document.createElement("div");
       const isIn = item.direction === "Arriving";
-      event.className = "calendar-event " + (isIn ? "event-in" : "event-out");
-      event.textContent = `${item.client}-${isIn ? "IN" : "OUT"}`;
-      cell.appendChild(event);
+      chip.className = "event-chip " + (isIn ? "event-in" : "event-out");
+      chip.textContent = `${item.client}-${isIn ? "IN" : "OUT"}`;
+      cell.appendChild(chip);
     });
 
-    grid.appendChild(cell);
+    calendarGrid.appendChild(cell);
+    cursor.setDate(cursor.getDate() + 1);
   }
 }
 
+function showBoard(){
+  document.getElementById("boardView").classList.remove("hidden");
+  document.getElementById("calendarView").classList.add("hidden");
+}
+
+function showCalendar(){
+  document.getElementById("boardView").classList.add("hidden");
+  document.getElementById("calendarView").classList.remove("hidden");
+}
+
+function startAutoToggle(){
+  let showingBoard = true;
+  showBoard();
+
+  function cycle(){
+    if(showingBoard){
+      setTimeout(() => {
+        showCalendar();
+        showingBoard = false;
+        cycle();
+      }, BOARD_SECONDS * 1000);
+    } else {
+      setTimeout(() => {
+        showBoard();
+        showingBoard = true;
+        cycle();
+      }, CALENDAR_SECONDS * 1000);
+    }
+  }
+
+  cycle();
+}
+
 fetch(url)
-.then(r=>r.text())
-.then(text=>{
-  let rows = parseCSV(text);
-  rows.shift();
+  .then(r => r.text())
+  .then(text => {
+    const rows = parseCSV(text);
+    rows.shift();
 
-  let arriving = [];
-  let loading = [];
-  let departures = [];
-  let allItems = [];
-  let lateCount = 0;
+    const arriving = [];
+    const loading = [];
+    const departures = [];
+    const allItems = [];
 
-  rows.forEach(r=>{
-    // 0 Priority
-    // 1 Date
-    // 2 ETA
-    // 3 Direction
-    // 4 Type of Cargo
-    // 5 Country
-    // 6 Container
-    // 7 Client
-    // 8 Temperature
-    // 9 Door
-    // 10 Status
-    // 11 Notes
+    let lateCount = 0;
 
-    const date = clean(r[1]);
-    const eta = clean(r[2]);
-    const direction = clean(r[3]);
-    const cargo = clean(r[4]);
-    const country = clean(r[5]);
-    const container = clean(r[6]);
-    const client = clean(r[7]);
-    const temp = clean(r[8]);
-    const door = clean(r[9]);
-    const status = clean(r[10]);
+    rows.forEach(r => {
+      // 0 Priority
+      // 1 Date
+      // 2 ETA
+      // 3 Direction
+      // 4 Type of Cargo
+      // 5 Country
+      // 6 Container
+      // 7 Client
+      // 8 Temperature
+      // 9 Door
+      // 10 Status
+      // 11 Notes
 
-    if(!date && !eta && !direction && !container) return;
+      const date = clean(r[1]);
+      const eta = clean(r[2]);
+      const direction = clean(r[3]);
+      const cargo = clean(r[4]);
+      const country = clean(r[5]);
+      const container = clean(r[6]);
+      const client = clean(r[7]);
+      const temp = clean(r[8]);
+      const door = clean(r[9]);
+      const status = clean(r[10]);
 
-    const norm = normalize(status);
-    const parsedDate = parseDate(date);
-    const late = isLate(date,eta,status) || norm.includes("hold") || norm.includes("problem");
+      if(!date && !eta && !direction && !container) return;
 
-    if(late) lateCount++;
+      const parsedDate = parseDate(date);
+      const norm = normalize(status);
+      const late = isLate(date, eta, status) || norm.includes("hold") || norm.includes("problem");
 
-    const item = {
-      date,
-      eta,
-      direction,
-      cargo,
-      country,
-      container,
-      client,
-      temp,
-      door,
-      status,
-      norm,
-      late,
-      parsedDate,
-      sortDate: parsedDate ? parsedDate.getTime() : Number.MAX_SAFE_INTEGER,
-      sortTime: minutes(eta)
+      if(late) lateCount++;
+
+      const item = {
+        date,
+        eta,
+        direction,
+        cargo,
+        country,
+        container,
+        client,
+        temp,
+        door,
+        status,
+        norm,
+        late,
+        parsedDate,
+        sortDate: parsedDate ? parsedDate.getTime() : Number.MAX_SAFE_INTEGER,
+        sortTime: parseTimeMinutes(eta)
+      };
+
+      allItems.push(item);
+
+      if(isInCurrentWeek(parsedDate)){
+        if(direction === "Arriving") arriving.push(item);
+        if(direction === "Leaving") departures.push(item);
+        if(norm.includes("loading") || norm.includes("unloading")) loading.push(item);
+      }
+    });
+
+    const sorter = (a,b)=>{
+      if(a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
+      return a.sortTime - b.sortTime;
     };
 
-    allItems.push(item);
+    arriving.sort(sorter);
+    loading.sort(sorter);
+    departures.sort(sorter);
+    allItems.sort(sorter);
 
-    if(direction === "Arriving") arriving.push(item);
-    if(direction === "Leaving") departures.push(item);
-    if(norm.includes("loading") || norm.includes("unloading")) loading.push(item);
+    arriving.forEach(item => {
+      document.getElementById("arriving").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    loading.forEach(item => {
+      document.getElementById("loading").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    departures.forEach(item => {
+      document.getElementById("departures").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    document.getElementById("countArriving").textContent = arriving.length;
+    document.getElementById("countLoading").textContent = loading.length;
+    document.getElementById("countDepartures").textContent = departures.length;
+    document.getElementById("countLate").textContent = lateCount;
+
+    buildMonthCalendar(allItems);
+    startAutoToggle();
   });
 
-  const sorter = (a,b)=>{
-    if(a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
-    return a.sortTime - b.sortTime;
-  };
-
-  arriving.sort(sorter);
-  loading.sort(sorter);
-  departures.sort(sorter);
-  allItems.sort(sorter);
-
-  arriving.forEach(x=>{
-    document.getElementById("arriving").innerHTML += createBoardRow(x);
-  });
-
-  loading.forEach(x=>{
-    document.getElementById("loading").innerHTML += createBoardRow(x);
-  });
-
-  departures.forEach(x=>{
-    document.getElementById("departures").innerHTML += createBoardRow(x);
-  });
-
-  document.getElementById("countArriving").innerText = arriving.length;
-  document.getElementById("countLoading").innerText = loading.length;
-  document.getElementById("countDepartures").innerText = departures.length;
-  document.getElementById("countLate").innerText = lateCount;
-
-  buildMonthGrid(allItems);
-});
-
-setTimeout(()=>location.reload(),15000);
+setTimeout(() => location.reload(), 60000);
 </script>
 
 </body>
