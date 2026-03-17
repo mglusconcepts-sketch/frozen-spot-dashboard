@@ -1,3 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Frozen Spot Operations</title>
+<style>
+  html, body{
+    height:100%;
+  }
+
+  body{
+    background:#000;
+    color:#fff;
+    font-family:Arial,sans-serif;
+    margin:0;
+    padding:8px;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+
+  .header{
+    text-align:center;
+    font-size:54px;
+    font-weight:bold;
+    margin:4px 0 10px 0;
+    line-height:1;
+  }
+
+  .topbar{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:10px;
+  }
+
+  .counter{
+    background:#111;
+    border-radius:8px;
+    padding:10px;
+    text-align:center;
+  }
+
+  .counter-label{
+    font-size:18px;
+    color:#bbb;
+  }
+
+  .counter-value{
+    font-size:34px;
+    font-weight:bold;
+    line-height:1.1;
+  }
+
+  .container{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:12px;
+  }
+
+  .section{
+    background:#111;
+    border-radius:8px;
+    padding:14px;
+    min-height:300px;
+  }
+
+  .section h2{
+    font-size:30px;
+    margin:0 0 10px 0;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  td{
+    padding:8px;
+    font-size:20px;
+    border-bottom:1px solid #222;
+    vertical-align:top;
+  }
+
+  .time-block{
+    line-height:1.15;
+  }
+
+  .time-date{
+    display:block;
+    font-size:14px;
+    color:#bbb;
+    margin-bottom:3px;
+  }
+
+  .time-hour{
+    display:block;
+    font-size:20px;
+    font-weight:bold;
+  }
+
+  .small{
+    display:block;
+    font-size:14px;
+    color:#bbb;
+    margin-top:2px;
+    line-height:1.2;
+  }
+
+  .footer{
+    text-align:center;
+    margin-top:8px;
+    font-size:18px;
+    color:#bbb;
+  }
+
+  .hidden{
+    display:none !important;
+  }
+
+  body.calendar-mode{
+    padding:4px;
+  }
+
+  body.calendar-mode .header{
+    display:none;
+  }
+
+  body.calendar-mode .topbar{
+    display:none;
+  }
+
+  body.calendar-mode .footer{
+    display:none;
+  }
+
+  body.calendar-mode #boardView{
+    display:none !important;
+  }
+
+  body.calendar-mode #calendarView{
+    display:flex !important;
+  }
+
+  .status-loading td,
+  .status-unloading td{
+    background:rgba(255,193,7,.30);
+    color:#ffe082;
+  }
+
+  .status-complete td{
+    color:#888;
+  }
+
+  .status-hold td,
+  .status-problem td{
+    background:rgba(244,67,54,.35);
+    color:#ffb3b3;
+    font-weight:bold;
+  }
+
+  .status-checkedin td,
+  .status-checked-in td{
+    background:rgba(76,175,80,.30);
+    color:#b9f6ca;
+  }
+
+  .late td{
+    background:rgba(211,47,47,.45)!important;
+    color:#ffd0d0!important;
+    font-weight:bold;
+  }
+
+  .calendar-view{
+    background:#111;
+    border-radius:8px;
+    padding:4px;
+    height:calc(100vh - 8px);
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .calendar-header{
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+    margin-bottom:4px;
+    line-height:1;
+    flex:0 0 auto;
+  }
+
+  .month-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    grid-auto-rows:1fr;
+    gap:1px;
+    background:#333;
+    border:1px solid #333;
+    flex:1 1 auto;
+    min-height:0;
+    height:100%;
+  }
+
+  .weekday{
+    background:#1a1a1a;
+    color:#fff;
+    padding:4px 4px;
+    font-size:15px;
+    font-weight:bold;
+    display:flex;
+    align-items:center;
+  }
+
+  .day-cell{
+    background:#f3f3f3;
+    color:#000;
+    padding:4px;
+    position:relative;
+    overflow:hidden;
+    min-height:0;
+  }
+
+  .day-number{
+    font-size:14px;
+    font-weight:bold;
+    margin-bottom:4px;
+    line-height:1;
+  }
+
+  .event-chip{
+    font-size:12px;
+    line-height:1.15;
+    margin:2px 0;
+    padding:3px 4px;
+    border-left:3px solid transparent;
+    border-radius:2px;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    font-weight:bold;
+  }
+
+  .event-in{
+    background:#f7c7c7;
+    border-left-color:#c62828;
+    color:#000;
+  }
+
+  .event-out{
+    background:#bbdefb;
+    border-left-color:#1565c0;
+    color:#000;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">FROZEN SPOT OPERATIONS</div>
+
+<div class="topbar">
+  <div class="counter">
+    <div class="counter-label">Arriving</div>
+    <div id="countArriving" class="counter-value">0</div>
+  </div>
+  <div class="counter">
+    <div class="counter-label">Active Docks</div>
+    <div id="countLoading" class="counter-value">0</div>
+  </div>
+  <div class="counter">
+    <div class="counter-label">Departures</div>
+    <div id="countDepartures" class="counter-value">0</div>
+  </div>
+  <div class="counter">
+    <div class="counter-label">Late / Hold</div>
+    <div id="countLate" class="counter-value">0</div>
+  </div>
+</div>
+
+<div id="boardView" class="container">
+  <div class="section">
+    <h2>ARRIVING</h2>
+    <table id="arriving"></table>
+  </div>
+
+  <div class="section">
+    <h2>ACTIVE DOCKS</h2>
+    <table id="loading"></table>
+  </div>
+
+  <div class="section">
+    <h2>DEPARTURES</h2>
+    <table id="departures"></table>
+  </div>
+</div>
+
+<div id="calendarView" class="calendar-view hidden">
+  <div id="calendarHeader" class="calendar-header"></div>
+  <div id="calendarGrid" class="month-grid"></div>
+</div>
+
+<div class="footer">Warehouse Dashboard – Auto Refresh</div>
+
+<script>
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
+
+const BOARD_SECONDS = 10;
+const CALENDAR_SECONDS = 10;
+
+function parseCSV(text){
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+
+  for(let i=0;i<text.length;i++){
+    const char = text[i];
+    const nextChar = text[i+1];
+
+    if(char === '"'){
+      if(inQuotes && nextChar === '"'){
+        cell += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if(char === ',' && !inQuotes){
+      row.push(cell);
+      cell = "";
+    } else if((char === '\n' || char === '\r') && !inQuotes){
+      if(char === '\r' && nextChar === '\n') i++;
+      row.push(cell);
+      if(row.some(c => c.trim() !== "")) rows.push(row);
+      row = [];
+      cell = "";
+    } else {
+      cell += char;
+    }
+  }
+
+  if(cell.length > 0 || row.length > 0){
+    row.push(cell);
+    if(row.some(c => c.trim() !== "")) rows.push(row);
+  }
+
+  return rows;
+}
+
+function clean(v){
+  return (v || "").trim();
+}
+
+function normalize(v){
+  return clean(v).toLowerCase().replace(/\s+/g, "");
+}
+
+function parseDate(dateStr){
+  const value = clean(dateStr);
+  const parts = value.split("/");
+  if(parts.length !== 3) return null;
+  return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
+}
+
+function parseTimeMinutes(t){
+  const value = clean(t);
+  if(!value) return 9999;
+
+  const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
+  if(!match) return 9999;
+
+  let hour = parseInt(match[1],10);
+  const minute = parseInt(match[2],10);
+  const ampm = match[3] ? match[3].toUpperCase() : null;
+
+  if(ampm === "PM" && hour !== 12) hour += 12;
+  if(ampm === "AM" && hour === 12) hour = 0;
+
+  return hour * 60 + minute;
+}
+
+function formatBoardDate(dateStr){
+  const d = parseDate(dateStr);
+  if(!d) return clean(dateStr);
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+}
+
+function isLate(dateStr, timeStr, status){
+  const normalized = normalize(status);
+  if(normalized === "complete") return false;
+
+  const rowDate = parseDate(dateStr);
+  if(!rowDate) return false;
+
+  const now = new Date();
+  if(rowDate.toDateString() !== now.toDateString()) return false;
+
+  const rowMins = parseTimeMinutes(timeStr);
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+
+  return rowMins < nowMins;
+}
+
+function getWeekStart(d){
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = date.getDay();
+  date.setDate(date.getDate() - day);
+  date.setHours(0,0,0,0);
+  return date;
+}
+
+function getWeekEnd(d){
+  const start = getWeekStart(d);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23,59,59,999);
+  return end;
+}
+
+function isInCurrentWeek(dateObj){
+  if(!dateObj) return false;
+  const now = new Date();
+  const start = getWeekStart(now);
+  const end = getWeekEnd(now);
+  return dateObj >= start && dateObj <= end;
+}
+
+function createBoardRow(item){
+  return `
+    <tr class="status-${item.norm} ${item.late ? "late" : ""}">
+      <td>
+        <div class="time-block">
+          <span class="time-date">${formatBoardDate(item.date)}</span>
+          <span class="time-hour">${item.eta}</span>
+        </div>
+      </td>
+      <td>
+        ${item.container}
+        <span class="small">${item.client}</span>
+        <span class="small">${item.cargo} • ${item.country} • ${item.temp}</span>
+      </td>
+      <td>Door ${item.door}</td>
+    </tr>
+  `;
+}
+
 function buildMonthCalendar(items){
   const calendarGrid = document.getElementById("calendarGrid");
   const calendarHeader = document.getElementById("calendarHeader");
@@ -35,9 +480,9 @@ function buildMonthCalendar(items){
     if(!item.parsedDate) return;
     if(item.parsedDate.getFullYear() !== year || item.parsedDate.getMonth() !== month) return;
 
-    const dateKey = `${item.parsedDate.getFullYear()}-${item.parsedDate.getMonth()+1}-${item.parsedDate.getDate()}`;
-    if(!itemsByDate[dateKey]) itemsByDate[dateKey] = [];
-    itemsByDate[dateKey].push(item);
+    const key = `${item.parsedDate.getFullYear()}-${item.parsedDate.getMonth()+1}-${item.parsedDate.getDate()}`;
+    if(!itemsByDate[key]) itemsByDate[key] = [];
+    itemsByDate[key].push(item);
   });
 
   for(let i=0;i<totalRows * 7;i++){
@@ -60,7 +505,6 @@ function buildMonthCalendar(items){
     const key = `${year}-${month+1}-${dayIndex}`;
     const dayItems = (itemsByDate[key] || []).sort((a,b)=>a.sortTime - b.sortTime);
 
-    // Group same client + same direction + same cargo on same day
     const grouped = {};
     dayItems.forEach(item => {
       const directionLabel = item.direction === "Arriving" ? "IN" : "OUT";
@@ -86,10 +530,141 @@ function buildMonthCalendar(items){
 
       const countSuffix = group.count > 1 ? ` x${group.count}` : "";
       chip.textContent = `${group.client}-${group.directionLabel}(${group.cargo})${countSuffix}`;
-
       cell.appendChild(chip);
     });
 
     calendarGrid.appendChild(cell);
   }
 }
+
+function showBoard(){
+  document.body.classList.remove("calendar-mode");
+  document.getElementById("boardView").classList.remove("hidden");
+  document.getElementById("calendarView").classList.add("hidden");
+}
+
+function showCalendar(){
+  document.body.classList.add("calendar-mode");
+  document.getElementById("boardView").classList.add("hidden");
+  document.getElementById("calendarView").classList.remove("hidden");
+}
+
+function startAutoToggle(){
+  let showingBoard = true;
+  showBoard();
+
+  function cycle(){
+    if(showingBoard){
+      setTimeout(() => {
+        showCalendar();
+        showingBoard = false;
+        cycle();
+      }, BOARD_SECONDS * 1000);
+    } else {
+      setTimeout(() => {
+        showBoard();
+        showingBoard = true;
+        cycle();
+      }, CALENDAR_SECONDS * 1000);
+    }
+  }
+
+  cycle();
+}
+
+fetch(url)
+  .then(r => r.text())
+  .then(text => {
+    const rows = parseCSV(text);
+    rows.shift();
+
+    const arriving = [];
+    const loading = [];
+    const departures = [];
+    const allItems = [];
+
+    let lateCount = 0;
+
+    rows.forEach(r => {
+      const date = clean(r[1]);
+      const eta = clean(r[2]);
+      const direction = clean(r[3]);
+      const cargo = clean(r[4]);
+      const country = clean(r[5]);
+      const container = clean(r[6]);
+      const client = clean(r[7]);
+      const temp = clean(r[8]);
+      const door = clean(r[9]);
+      const status = clean(r[10]);
+
+      if(!date && !eta && !direction && !container) return;
+
+      const parsedDate = parseDate(date);
+      const norm = normalize(status);
+      const late = isLate(date, eta, status) || norm.includes("hold") || norm.includes("problem");
+
+      if(late) lateCount++;
+
+      const item = {
+        date,
+        eta,
+        direction,
+        cargo,
+        country,
+        container,
+        client,
+        temp,
+        door,
+        status,
+        norm,
+        late,
+        parsedDate,
+        sortDate: parsedDate ? parsedDate.getTime() : Number.MAX_SAFE_INTEGER,
+        sortTime: parseTimeMinutes(eta)
+      };
+
+      allItems.push(item);
+
+      if(isInCurrentWeek(parsedDate)){
+        if(direction === "Arriving") arriving.push(item);
+        if(direction === "Leaving") departures.push(item);
+        if(norm.includes("loading") || norm.includes("unloading")) loading.push(item);
+      }
+    });
+
+    const sorter = (a,b)=>{
+      if(a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
+      return a.sortTime - b.sortTime;
+    };
+
+    arriving.sort(sorter);
+    loading.sort(sorter);
+    departures.sort(sorter);
+    allItems.sort(sorter);
+
+    arriving.forEach(item => {
+      document.getElementById("arriving").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    loading.forEach(item => {
+      document.getElementById("loading").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    departures.forEach(item => {
+      document.getElementById("departures").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    document.getElementById("countArriving").textContent = arriving.length;
+    document.getElementById("countLoading").textContent = loading.length;
+    document.getElementById("countDepartures").textContent = departures.length;
+    document.getElementById("countLate").textContent = lateCount;
+
+    buildMonthCalendar(allItems);
+    startAutoToggle();
+  });
+
+setTimeout(() => location.reload(), 60000);
+</script>
+
+</body>
+</html>
