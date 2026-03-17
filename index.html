@@ -3,171 +3,279 @@
 <head>
 <meta charset="UTF-8" />
 <title>Frozen Spot Operations</title>
-
 <style>
-html,body{
-  height:100%;
-  margin:0;
-  padding:6px;
-  background:#000;
-  color:#fff;
-  font-family:Arial,sans-serif;
-  overflow:hidden;
-}
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+  }
 
-/* HEADER */
-.header{
-  text-align:center;
-  font-size:48px;
-  font-weight:bold;
-  margin-bottom:8px;
-}
+  body {
+    box-sizing: border-box;
+    padding: 8px;
+  }
 
-/* COUNTERS */
-.topbar{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  margin-bottom:8px;
-}
+  .hidden {
+    display: none !important;
+  }
 
-.counter{
-  background:#111;
-  padding:8px;
-  border-radius:6px;
-  text-align:center;
-}
+  /* BOARD LAYOUT */
+  .header {
+    text-align: center;
+    font-size: 46px;
+    font-weight: bold;
+    line-height: 1;
+    margin: 2px 0 8px 0;
+  }
 
-.counter-label{font-size:16px;color:#bbb;}
-.counter-value{font-size:28px;font-weight:bold;}
+  .topbar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+  }
 
-/* BOARD */
-.container{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:10px;
-}
+  .counter {
+    background: #111;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+  }
 
-.section{
-  background:#111;
-  padding:10px;
-  border-radius:6px;
-}
+  .counter-label {
+    font-size: 16px;
+    color: #bbb;
+  }
 
-.section h2{
-  margin:0 0 6px;
-  font-size:26px;
-}
+  .counter-value {
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1.1;
+  }
 
-table{width:100%;}
-td{
-  font-size:18px;
-  padding:6px;
-  border-bottom:1px solid #222;
-}
+  .board-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
 
-.small{display:block;font-size:13px;color:#bbb;}
+  .section {
+    background: #111;
+    border-radius: 6px;
+    padding: 10px;
+    min-height: 280px;
+  }
 
-/* CALENDAR MODE */
-body.calendar-mode .header,
-body.calendar-mode .topbar,
-body.calendar-mode .container{
-  display:none;
-}
+  .section h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+  }
 
-/* CALENDAR */
-.calendar-view{
-  height:100%;
-  display:flex;
-  flex-direction:column;
-}
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
 
-.calendar-header{
-  text-align:center;
-  font-size:22px;
-  margin-bottom:4px;
-}
+  td {
+    padding: 8px 6px;
+    font-size: 18px;
+    border-bottom: 1px solid #222;
+    vertical-align: top;
+  }
 
-.month-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  grid-auto-rows:1fr;
-  gap:1px;
-  height:100%;
-}
+  .time-block {
+    line-height: 1.15;
+  }
 
-/* 🔥 WEEKDAY HEADER FIX */
-.weekday{
-  background:#1a1a1a;
-  font-size:11px;
-  height:18px;
-  display:flex;
-  align-items:center;
-  justify-content:center; /* CENTERED */
-  font-weight:bold;
-}
+  .time-date {
+    display: block;
+    font-size: 13px;
+    color: #bbb;
+    margin-bottom: 2px;
+  }
 
-/* DAY CELL */
-.day-cell{
-  background:#f3f3f3;
-  color:#000;
-  padding:3px;
-  display:flex;
-  flex-direction:column;
-}
+  .time-hour {
+    display: block;
+    font-size: 19px;
+    font-weight: bold;
+  }
 
-/* DAY NUMBER */
-.day-number{
-  font-size:12px;
-  font-weight:bold;
-  margin-bottom:2px;
-}
+  .small {
+    display: block;
+    font-size: 13px;
+    color: #bbb;
+    margin-top: 2px;
+    line-height: 1.2;
+  }
 
-/* EVENTS */
-.event-chip{
-  font-size:11px;
-  margin:1px 0;
-  padding:2px 3px;
-  border-radius:2px;
-  font-weight:bold;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+  .footer {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 16px;
+    color: #bbb;
+  }
 
-.event-in{
-  background:#f7c7c7;
-  border-left:3px solid #c62828;
-}
+  /* BOARD COLORS */
+  .status-loading td,
+  .status-unloading td {
+    background: rgba(255, 193, 7, 0.28);
+    color: #ffe082;
+  }
 
-.event-out{
-  background:#bbdefb;
-  border-left:3px solid #1565c0;
-}
+  .status-complete td {
+    color: #888;
+  }
 
-/* LATE */
-.late td{
-  background:#8b0000;
-  color:#fff;
-}
+  .status-hold td,
+  .status-problem td {
+    background: rgba(244, 67, 54, 0.35);
+    color: #ffb3b3;
+    font-weight: bold;
+  }
+
+  .status-checkedin td,
+  .status-checked-in td {
+    background: rgba(76, 175, 80, 0.28);
+    color: #b9f6ca;
+  }
+
+  .late td {
+    background: rgba(211, 47, 47, 0.45) !important;
+    color: #ffd0d0 !important;
+    font-weight: bold;
+  }
+
+  /* CALENDAR VIEW */
+  .calendar-view {
+    height: calc(100vh - 16px);
+    display: flex;
+    flex-direction: column;
+    background: #111;
+    border-radius: 6px;
+    padding: 4px;
+    box-sizing: border-box;
+  }
+
+  .calendar-header {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 0 4px 0;
+    line-height: 1.1;
+    flex: 0 0 auto;
+  }
+
+  .month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: 22px repeat(5, 1fr);
+    gap: 1px;
+    background: #333;
+    border: 1px solid #333;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .weekday {
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .day-cell {
+    background: #f3f3f3;
+    color: #000;
+    padding: 3px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .day-empty {
+    background: #111;
+  }
+
+  .day-number {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 3px;
+    line-height: 1;
+  }
+
+  .event-chip {
+    font-size: 12px;
+    line-height: 1.15;
+    margin: 2px 0;
+    padding: 2px 4px;
+    border-radius: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: bold;
+  }
+
+  .event-in {
+    background: #f7c7c7;
+    border-left: 3px solid #c62828;
+    color: #000;
+  }
+
+  .event-out {
+    background: #bbdefb;
+    border-left: 3px solid #1565c0;
+    color: #000;
+  }
 </style>
 </head>
-
 <body>
 
-<div class="header">FROZEN SPOT OPERATIONS</div>
+<div id="boardWrapper">
+  <div class="header">FROZEN SPOT OPERATIONS</div>
 
-<div class="topbar">
-  <div class="counter"><div class="counter-label">Arriving</div><div id="countArriving" class="counter-value">0</div></div>
-  <div class="counter"><div class="counter-label">Active Docks</div><div id="countLoading" class="counter-value">0</div></div>
-  <div class="counter"><div class="counter-label">Departures</div><div id="countDepartures" class="counter-value">0</div></div>
-  <div class="counter"><div class="counter-label">Late / Hold</div><div id="countLate" class="counter-value">0</div></div>
-</div>
+  <div class="topbar">
+    <div class="counter">
+      <div class="counter-label">Arriving</div>
+      <div id="countArriving" class="counter-value">0</div>
+    </div>
+    <div class="counter">
+      <div class="counter-label">Active Docks</div>
+      <div id="countLoading" class="counter-value">0</div>
+    </div>
+    <div class="counter">
+      <div class="counter-label">Departures</div>
+      <div id="countDepartures" class="counter-value">0</div>
+    </div>
+    <div class="counter">
+      <div class="counter-label">Late / Hold</div>
+      <div id="countLate" class="counter-value">0</div>
+    </div>
+  </div>
 
-<div id="boardView" class="container">
-  <div class="section"><h2>ARRIVING</h2><table id="arriving"></table></div>
-  <div class="section"><h2>ACTIVE DOCKS</h2><table id="loading"></table></div>
-  <div class="section"><h2>DEPARTURES</h2><table id="departures"></table></div>
+  <div id="boardView" class="board-view">
+    <div class="section">
+      <h2>ARRIVING</h2>
+      <table id="arriving"></table>
+    </div>
+
+    <div class="section">
+      <h2>ACTIVE DOCKS</h2>
+      <table id="loading"></table>
+    </div>
+
+    <div class="section">
+      <h2>DEPARTURES</h2>
+      <table id="departures"></table>
+    </div>
+  </div>
+
+  <div class="footer">Warehouse Dashboard – Auto Refresh</div>
 </div>
 
 <div id="calendarView" class="calendar-view hidden">
@@ -176,142 +284,377 @@ body.calendar-mode .container{
 </div>
 
 <script>
-const url = "YOUR_GOOGLE_SHEET_CSV_URL";
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
 
-/* HELPERS */
-function parseDate(d){
-  const p=d.split("/");
-  return new Date(p[2],p[0]-1,p[1]);
+const BOARD_SECONDS = 10;
+const CALENDAR_SECONDS = 10;
+
+/* CSV PARSER */
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        cell += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      row.push(cell);
+      cell = "";
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') i++;
+      row.push(cell);
+      if (row.some(c => c.trim() !== "")) rows.push(row);
+      row = [];
+      cell = "";
+    } else {
+      cell += char;
+    }
+  }
+
+  if (cell.length > 0 || row.length > 0) {
+    row.push(cell);
+    if (row.some(c => c.trim() !== "")) rows.push(row);
+  }
+
+  return rows;
 }
 
-function parseTime(t){
-  const m=t.match(/(\d+):(\d+)/);
-  if(!m) return 9999;
-  return parseInt(m[1])*60+parseInt(m[2]);
+function clean(v) {
+  return (v || "").trim();
 }
 
-function isLate(date,time){
-  const now=new Date();
-  const d=parseDate(date);
-  if(d.toDateString()!=now.toDateString()) return false;
-  return parseTime(time) < now.getHours()*60+now.getMinutes();
+function normalize(v) {
+  return clean(v).toLowerCase().replace(/\s+/g, "");
 }
 
-/* CALENDAR */
-function buildMonthCalendar(items){
-  const grid=document.getElementById("calendarGrid");
-  const header=document.getElementById("calendarHeader");
-  grid.innerHTML="";
+function parseDate(dateStr) {
+  const value = clean(dateStr);
+  const parts = value.split("/");
+  if (parts.length !== 3) return null;
+  return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
+}
 
-  const now=new Date();
-  const y=now.getFullYear();
-  const m=now.getMonth();
+function parseTimeMinutes(t) {
+  const value = clean(t);
+  if (!value) return 9999;
 
-  header.textContent=now.toLocaleString('default',{month:'long'})+" "+y;
+  const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
+  if (!match) return 9999;
 
-  const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  days.forEach(d=>{
-    const el=document.createElement("div");
-    el.className="weekday";
-    el.textContent=d;
-    grid.appendChild(el);
+  let hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2], 10);
+  const ampm = match[3] ? match[3].toUpperCase() : null;
+
+  if (ampm === "PM" && hour !== 12) hour += 12;
+  if (ampm === "AM" && hour === 12) hour = 0;
+
+  return hour * 60 + minute;
+}
+
+function formatBoardDate(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return clean(dateStr);
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+}
+
+function isLate(dateStr, timeStr, status) {
+  const normalized = normalize(status);
+  if (normalized === "complete") return false;
+
+  const rowDate = parseDate(dateStr);
+  if (!rowDate) return false;
+
+  const now = new Date();
+  if (rowDate.toDateString() !== now.toDateString()) return false;
+
+  const rowMins = parseTimeMinutes(timeStr);
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+
+  return rowMins < nowMins;
+}
+
+function getWeekStart(d) {
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = date.getDay();
+  date.setDate(date.getDate() - day);
+  date.setHours(0,0,0,0);
+  return date;
+}
+
+function getWeekEnd(d) {
+  const start = getWeekStart(d);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23,59,59,999);
+  return end;
+}
+
+function isInCurrentWeek(dateObj) {
+  if (!dateObj) return false;
+  const now = new Date();
+  const start = getWeekStart(now);
+  const end = getWeekEnd(now);
+  return dateObj >= start && dateObj <= end;
+}
+
+function createBoardRow(item) {
+  return `
+    <tr class="status-${item.norm} ${item.late ? "late" : ""}">
+      <td>
+        <div class="time-block">
+          <span class="time-date">${formatBoardDate(item.date)}</span>
+          <span class="time-hour">${item.eta}</span>
+        </div>
+      </td>
+      <td>
+        ${item.container}
+        <span class="small">${item.client}</span>
+        <span class="small">${item.cargo} • ${item.country} • ${item.temp}</span>
+      </td>
+      <td>Door ${item.door}</td>
+    </tr>
+  `;
+}
+
+function buildMonthCalendar(items) {
+  const calendarGrid = document.getElementById("calendarGrid");
+  const calendarHeader = document.getElementById("calendarHeader");
+  calendarGrid.innerHTML = "";
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  calendarHeader.textContent = `${monthNames[month]} ${year}`;
+
+  const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  weekdays.forEach(day => {
+    const el = document.createElement("div");
+    el.className = "weekday";
+    el.textContent = day;
+    calendarGrid.appendChild(el);
   });
 
-  const first=new Date(y,m,1);
-  const last=new Date(y,m+1,0);
+  const firstOfMonth = new Date(year, month, 1);
+  const lastOfMonth = new Date(year, month + 1, 0);
+  const firstDayOffset = firstOfMonth.getDay();
+  const totalDays = lastOfMonth.getDate();
+  const totalCells = totalDays + firstDayOffset;
+  const totalRows = Math.ceil(totalCells / 7);
 
-  const offset=first.getDay();
-  const total=last.getDate();
+  const itemsByDate = {};
+  items.forEach(item => {
+    if (!item.parsedDate) return;
+    if (item.parsedDate.getFullYear() !== year || item.parsedDate.getMonth() !== month) return;
 
-  const map={};
-
-  items.forEach(i=>{
-    if(i.dateObj.getMonth()!=m) return;
-
-    const key=i.dateObj.getDate();
-
-    if(!map[key]) map[key]=[];
-
-    map[key].push(i);
+    const key = `${item.parsedDate.getFullYear()}-${item.parsedDate.getMonth()+1}-${item.parsedDate.getDate()}`;
+    if (!itemsByDate[key]) itemsByDate[key] = [];
+    itemsByDate[key].push(item);
   });
 
-  for(let i=0;i<offset+total;i++){
-    const cell=document.createElement("div");
-    cell.className="day-cell";
+  for (let i = 0; i < totalRows * 7; i++) {
+    const cell = document.createElement("div");
+    cell.className = "day-cell";
 
-    const day=i-offset+1;
+    const dayIndex = i - firstDayOffset + 1;
 
-    if(day<1 || day>total){
-      cell.style.background="#111";
-      grid.appendChild(cell);
+    if (dayIndex < 1 || dayIndex > totalDays) {
+      cell.classList.add("day-empty");
+      calendarGrid.appendChild(cell);
       continue;
     }
 
-    const num=document.createElement("div");
-    num.className="day-number";
-    num.textContent=day;
-    cell.appendChild(num);
+    const dayNumber = document.createElement("div");
+    dayNumber.className = "day-number";
+    dayNumber.textContent = dayIndex;
+    cell.appendChild(dayNumber);
 
-    const grouped={};
+    const key = `${year}-${month+1}-${dayIndex}`;
+    const dayItems = (itemsByDate[key] || []).sort((a,b) => a.sortTime - b.sortTime);
 
-    (map[day]||[]).forEach(it=>{
-      const dir=it.direction==="Arriving"?"IN":"OUT";
-      const key=it.client+"-"+dir+"-"+it.cargo;
+    const grouped = {};
+    dayItems.forEach(item => {
+      const directionLabel = item.direction === "Arriving" ? "IN" : "OUT";
+      const cargoLabel = item.cargo || "";
+      const clientLabel = item.client || "Unknown";
+      const groupKey = `${clientLabel}||${directionLabel}||${cargoLabel}`;
 
-      if(!grouped[key]){
-        grouped[key]={...it,count:0,dir};
+      if (!grouped[groupKey]) {
+        grouped[groupKey] = {
+          client: clientLabel,
+          directionLabel,
+          cargo: cargoLabel,
+          count: 0
+        };
       }
-      grouped[key].count++;
+      grouped[groupKey].count += 1;
     });
 
-    Object.values(grouped).forEach(g=>{
-      const chip=document.createElement("div");
-      chip.className="event-chip "+(g.dir==="IN"?"event-in":"event-out");
+    Object.values(grouped).forEach(group => {
+      const chip = document.createElement("div");
+      const isIn = group.directionLabel === "IN";
+      chip.className = "event-chip " + (isIn ? "event-in" : "event-out");
 
-      chip.textContent=`${g.client}-${g.dir}(${g.cargo})${g.count>1?" x"+g.count:""}`;
+      const countSuffix = group.count > 1 ? ` x${group.count}` : "";
+      chip.textContent = `${group.client}-${group.directionLabel}(${group.cargo})${countSuffix}`;
 
       cell.appendChild(chip);
     });
 
-    grid.appendChild(cell);
+    calendarGrid.appendChild(cell);
   }
 }
 
-/* LOAD */
+function showBoard() {
+  document.getElementById("boardWrapper").classList.remove("hidden");
+  document.getElementById("calendarView").classList.add("hidden");
+}
+
+function showCalendar() {
+  document.getElementById("boardWrapper").classList.add("hidden");
+  document.getElementById("calendarView").classList.remove("hidden");
+}
+
+function startAutoToggle() {
+  let showingBoard = true;
+  showBoard();
+
+  function cycle() {
+    if (showingBoard) {
+      setTimeout(() => {
+        showCalendar();
+        showingBoard = false;
+        cycle();
+      }, BOARD_SECONDS * 1000);
+    } else {
+      setTimeout(() => {
+        showBoard();
+        showingBoard = true;
+        cycle();
+      }, CALENDAR_SECONDS * 1000);
+    }
+  }
+
+  cycle();
+}
+
 fetch(url)
-.then(r=>r.text())
-.then(t=>{
-  const rows=t.split("\n").slice(1);
+  .then(r => r.text())
+  .then(text => {
+    const rows = parseCSV(text);
+    rows.shift();
 
-  const items=[];
+    const arriving = [];
+    const loading = [];
+    const departures = [];
+    const allItems = [];
 
-  rows.forEach(r=>{
-    const c=r.split(",");
+    let lateCount = 0;
 
-    if(!c[1]) return;
+    rows.forEach(r => {
+      // 0 Priority
+      // 1 Date
+      // 2 ETA
+      // 3 Direction
+      // 4 Type of Cargo
+      // 5 Country
+      // 6 Container
+      // 7 Client
+      // 8 Temperature
+      // 9 Door
+      // 10 Status
+      // 11 Notes
 
-    items.push({
-      date:c[1],
-      dateObj:parseDate(c[1]),
-      eta:c[2],
-      direction:c[3],
-      cargo:c[4],
-      client:c[7]
+      const date = clean(r[1]);
+      const eta = clean(r[2]);
+      const direction = clean(r[3]);
+      const cargo = clean(r[4]);
+      const country = clean(r[5]);
+      const container = clean(r[6]);
+      const client = clean(r[7]);
+      const temp = clean(r[8]);
+      const door = clean(r[9]);
+      const status = clean(r[10]);
+
+      if (!date && !eta && !direction && !container) return;
+
+      const parsedDate = parseDate(date);
+      const norm = normalize(status);
+      const late = isLate(date, eta, status) || norm.includes("hold") || norm.includes("problem");
+
+      if (late) lateCount++;
+
+      const item = {
+        date,
+        eta,
+        direction,
+        cargo,
+        country,
+        container,
+        client,
+        temp,
+        door,
+        status,
+        norm,
+        late,
+        parsedDate,
+        sortDate: parsedDate ? parsedDate.getTime() : Number.MAX_SAFE_INTEGER,
+        sortTime: parseTimeMinutes(eta)
+      };
+
+      allItems.push(item);
+
+      if (isInCurrentWeek(parsedDate)) {
+        if (direction === "Arriving") arriving.push(item);
+        if (direction === "Leaving") departures.push(item);
+        if (norm.includes("loading") || norm.includes("unloading")) loading.push(item);
+      }
     });
+
+    const sorter = (a,b) => {
+      if (a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
+      return a.sortTime - b.sortTime;
+    };
+
+    arriving.sort(sorter);
+    loading.sort(sorter);
+    departures.sort(sorter);
+    allItems.sort(sorter);
+
+    arriving.forEach(item => {
+      document.getElementById("arriving").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    loading.forEach(item => {
+      document.getElementById("loading").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    departures.forEach(item => {
+      document.getElementById("departures").insertAdjacentHTML("beforeend", createBoardRow(item));
+    });
+
+    document.getElementById("countArriving").textContent = arriving.length;
+    document.getElementById("countLoading").textContent = loading.length;
+    document.getElementById("countDepartures").textContent = departures.length;
+    document.getElementById("countLate").textContent = lateCount;
+
+    buildMonthCalendar(allItems);
+    startAutoToggle();
   });
 
-  buildMonthCalendar(items);
-});
-
-/* TOGGLE */
-let showBoard=true;
-
-setInterval(()=>{
-  showBoard=!showBoard;
-
-  document.body.classList.toggle("calendar-mode",!showBoard);
-
-},10000);
+setTimeout(() => location.reload(), 60000);
 </script>
 
 </body>
