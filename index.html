@@ -4,61 +4,72 @@
 <meta charset="UTF-8" />
 <title>Frozen Spot Operations</title>
 <style>
+  html, body{
+    height:100%;
+  }
+
   body{
     background:#000;
     color:#fff;
     font-family:Arial,sans-serif;
     margin:0;
-    padding:10px;
+    padding:8px;
+    box-sizing:border-box;
+    overflow:hidden;
   }
 
   .header{
     text-align:center;
-    font-size:58px;
+    font-size:54px;
     font-weight:bold;
-    margin:6px 0 14px 0;
+    margin:4px 0 10px 0;
+    line-height:1;
+    transition:all .25s ease;
   }
 
   .topbar{
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:14px;
-    margin-bottom:14px;
+    gap:10px;
+    margin-bottom:10px;
+    transition:all .25s ease;
   }
 
   .counter{
     background:#111;
     border-radius:8px;
-    padding:14px;
+    padding:10px;
     text-align:center;
+    transition:all .25s ease;
   }
 
   .counter-label{
-    font-size:20px;
+    font-size:18px;
     color:#bbb;
   }
 
   .counter-value{
-    font-size:42px;
+    font-size:34px;
     font-weight:bold;
+    line-height:1.1;
   }
 
   .container{
     display:grid;
     grid-template-columns:1fr 1fr 1fr;
-    gap:18px;
+    gap:12px;
   }
 
   .section{
     background:#111;
     border-radius:8px;
-    padding:18px;
-    min-height:330px;
+    padding:14px;
+    min-height:300px;
   }
 
   .section h2{
-    font-size:34px;
-    margin:0 0 14px 0;
+    font-size:30px;
+    margin:0 0 10px 0;
   }
 
   table{
@@ -67,46 +78,74 @@
   }
 
   td{
-    padding:10px;
-    font-size:22px;
+    padding:8px;
+    font-size:20px;
     border-bottom:1px solid #222;
     vertical-align:top;
   }
 
   .time-block{
-    line-height:1.2;
+    line-height:1.15;
   }
 
   .time-date{
     display:block;
-    font-size:15px;
+    font-size:14px;
     color:#bbb;
-    margin-bottom:4px;
+    margin-bottom:3px;
   }
 
   .time-hour{
     display:block;
-    font-size:22px;
+    font-size:20px;
     font-weight:bold;
   }
 
   .small{
     display:block;
-    font-size:15px;
+    font-size:14px;
     color:#bbb;
-    margin-top:3px;
-    line-height:1.25;
+    margin-top:2px;
+    line-height:1.2;
   }
 
   .footer{
     text-align:center;
-    margin-top:14px;
-    font-size:22px;
+    margin-top:8px;
+    font-size:18px;
     color:#bbb;
   }
 
   .hidden{
     display:none !important;
+  }
+
+  /* Smaller only in calendar mode */
+  body.calendar-mode .header{
+    font-size:34px;
+    margin:2px 0 6px 0;
+  }
+
+  body.calendar-mode .topbar{
+    gap:6px;
+    margin-bottom:6px;
+  }
+
+  body.calendar-mode .counter{
+    padding:6px;
+  }
+
+  body.calendar-mode .counter-label{
+    font-size:12px;
+  }
+
+  body.calendar-mode .counter-value{
+    font-size:22px;
+  }
+
+  body.calendar-mode .footer{
+    margin-top:4px;
+    font-size:14px;
   }
 
   /* Board colors */
@@ -139,45 +178,55 @@
     font-weight:bold;
   }
 
-  /* Calendar month view */
+  /* Calendar */
   .calendar-view{
     background:#111;
     border-radius:8px;
-    padding:14px;
-    min-height:640px;
+    padding:6px;
+    height:calc(100vh - 120px);
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
   }
 
   .calendar-header{
     text-align:center;
-    font-size:34px;
+    font-size:24px;
     font-weight:bold;
-    margin-bottom:10px;
+    margin-bottom:6px;
+    line-height:1;
+    flex:0 0 auto;
   }
 
   .month-grid{
     display:grid;
     grid-template-columns:repeat(7,1fr);
+    grid-template-rows:30px repeat(6, 1fr);
     gap:1px;
     background:#333;
     border:1px solid #333;
+    flex:1 1 auto;
+    min-height:0;
   }
 
   .weekday{
     background:#1a1a1a;
     color:#fff;
-    padding:8px 6px;
-    font-size:18px;
+    padding:4px 3px;
+    font-size:14px;
     font-weight:bold;
-    min-height:34px;
+    min-height:0;
+    display:flex;
+    align-items:center;
   }
 
   .day-cell{
     background:#f3f3f3;
     color:#000;
-    min-height:140px;
-    padding:4px;
+    padding:3px;
     position:relative;
     overflow:hidden;
+    min-height:0;
   }
 
   .day-cell.other-month{
@@ -186,21 +235,35 @@
   }
 
   .day-number{
-    font-size:16px;
+    font-size:13px;
     font-weight:bold;
-    margin-bottom:4px;
+    margin-bottom:3px;
+    line-height:1;
   }
 
   .event-chip{
-    font-size:12px;
-    line-height:1.15;
+    font-size:10px;
+    line-height:1.05;
     margin:2px 0;
-    padding:3px 4px;
+    padding:2px 3px;
     border-left:3px solid transparent;
     border-radius:2px;
+    overflow:hidden;
+  }
+
+  .event-line1{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
+    font-weight:bold;
+  }
+
+  .event-line2{
+    margin-top:1px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:9px;
   }
 
   .event-in{
@@ -416,14 +479,9 @@ function buildMonthCalendar(items){
     return;
   }
 
-  const sorted = [...items].sort((a,b)=>{
-    if(a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
-    return a.sortTime - b.sortTime;
-  });
-
-  const monthDate = sorted[0].parsedDate || new Date();
-  const year = monthDate.getFullYear();
-  const month = monthDate.getMonth();
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
 
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   calendarHeader.textContent = `${monthNames[month]} ${year}`;
@@ -442,9 +500,6 @@ function buildMonthCalendar(items){
   const gridStart = new Date(firstOfMonth);
   gridStart.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
 
-  const gridEnd = new Date(lastOfMonth);
-  gridEnd.setDate(lastOfMonth.getDate() + (6 - lastOfMonth.getDay()));
-
   const itemsByDate = {};
   items.forEach(item => {
     if(!item.parsedDate) return;
@@ -453,8 +508,10 @@ function buildMonthCalendar(items){
     itemsByDate[key].push(item);
   });
 
-  let cursor = new Date(gridStart);
-  while(cursor <= gridEnd){
+  for(let i=0;i<42;i++){
+    const cursor = new Date(gridStart);
+    cursor.setDate(gridStart.getDate() + i);
+
     const cell = document.createElement("div");
     cell.className = "day-cell";
 
@@ -474,21 +531,25 @@ function buildMonthCalendar(items){
       const chip = document.createElement("div");
       const isIn = item.direction === "Arriving";
       chip.className = "event-chip " + (isIn ? "event-in" : "event-out");
-      chip.textContent = `${item.client}-${isIn ? "IN" : "OUT"}`;
+      chip.innerHTML = `
+        <div class="event-line1">${item.client}-${isIn ? "IN" : "OUT"}</div>
+        <div class="event-line2">${item.cargo}</div>
+      `;
       cell.appendChild(chip);
     });
 
     calendarGrid.appendChild(cell);
-    cursor.setDate(cursor.getDate() + 1);
   }
 }
 
 function showBoard(){
+  document.body.classList.remove("calendar-mode");
   document.getElementById("boardView").classList.remove("hidden");
   document.getElementById("calendarView").classList.add("hidden");
 }
 
 function showCalendar(){
+  document.body.classList.add("calendar-mode");
   document.getElementById("boardView").classList.add("hidden");
   document.getElementById("calendarView").classList.remove("hidden");
 }
