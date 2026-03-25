@@ -3,726 +3,809 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Frozen Spot Operations</title>
+  <title>Frozen Spot Operations Dashboard</title>
+
   <style>
-    html, body {
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      background: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      overflow: hidden;
-      height: 100%;
+    }
+
+    :root {
+      --bg: #eef3f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #dbe3ee;
+      --shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+      --blue: #1d4ed8;
+      --blue-dark: #0f172a;
+      --red: #dc2626;
+      --amber: #f59e0b;
+      --green: #16a34a;
+      --hold: #b45309;
+      --loading: #2563eb;
+      --ready: #16a34a;
+      --sched: #64748b;
+      --done: #334155;
     }
 
     body {
-      box-sizing: border-box;
-      padding: 8px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
     }
 
-    .hidden {
-      display: none !important;
+    .app {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .title-bar {
+    .top-header {
+      width: 100%;
+      background: linear-gradient(90deg, #081120, #143a78 50%, #081120);
+      color: #fff;
+      padding: 16px 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+      flex-shrink: 0;
+    }
+
+    .header-inner {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .brand-wrap {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 14px;
-      margin: 4px 0 8px 0;
+      gap: 18px;
     }
 
-    .title-logo {
-      width: 56px;
-      height: 56px;
+    .brand-logo {
+      width: 68px;
+      height: 68px;
       object-fit: contain;
-      border-radius: 8px;
-      background: transparent;
-      flex: 0 0 auto;
+      display: block;
+      background: #fff;
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+      flex-shrink: 0;
     }
 
-    .header {
-      text-align: center;
-      font-size: 42px;
-      font-weight: bold;
-      line-height: 1;
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: left;
+    }
+
+    .brand-text h1 {
+      font-size: 2rem;
+      line-height: 1.05;
+      letter-spacing: 1px;
+      font-weight: 800;
       margin: 0;
     }
 
-    .topbar {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 10px;
+    .brand-text p {
+      margin-top: 4px;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.88);
+      letter-spacing: 0.5px;
     }
 
-    .counter {
-      background: #111;
-      border-radius: 6px;
-      padding: 8px;
-      text-align: center;
-    }
-
-    .counter-label {
-      font-size: 16px;
-      color: #bbb;
-    }
-
-    .counter-value {
-      font-size: 28px;
-      font-weight: bold;
-      line-height: 1.1;
-    }
-
-    .board-view {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-    }
-
-    .section {
-      background: #111;
-      border-radius: 6px;
-      padding: 10px;
-      min-height: 280px;
-    }
-
-    .section h2 {
-      margin: 0 0 8px 0;
-      font-size: 24px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    td {
-      padding: 10px 6px;
-      font-size: 18px;
-      border-bottom: 1px solid #222;
-      vertical-align: top;
-    }
-
-    .time-block {
-      line-height: 1.15;
-    }
-
-    .time-date {
-      display: block;
-      font-size: 16px;
-      color: #bbb;
-      margin-bottom: 4px;
-      font-weight: 600;
-    }
-
-    .time-hour {
-      display: block;
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    .client-main {
-      display: block;
-      font-size: 22px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-
-    .small {
-      display: block;
-      font-size: 13px;
-      color: #bbb;
-      margin-top: 2px;
-      line-height: 1.2;
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 8px;
-      font-size: 16px;
-      color: #bbb;
-    }
-
-    .status-loading td,
-    .status-unloading td {
-      background: rgba(255, 193, 7, 0.28);
-      color: #ffe082;
-    }
-
-    .status-complete td {
-      color: #888;
-    }
-
-    .status-hold td,
-    .status-problem td {
-      background: rgba(244, 67, 54, 0.35);
-      color: #ffb3b3;
-      font-weight: bold;
-    }
-
-    .status-checkedin td,
-    .status-checked-in td,
-    .status-ready td {
-      background: rgba(76, 175, 80, 0.20);
-      color: #d7ffd9;
-    }
-
-    .late td {
-      background: rgba(211, 47, 47, 0.45) !important;
-      color: #ffd0d0 !important;
-      font-weight: bold;
-    }
-
-    .calendar-view {
-      height: calc(100vh - 16px);
+    .main {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      background: #111;
-      border-radius: 6px;
-      padding: 4px;
-      box-sizing: border-box;
+      padding: 16px;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .top-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+      min-height: 105px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .stat-title {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 2.3rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .view-wrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .view-label {
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .content-view {
+      flex: 1;
+      min-height: 0;
+      display: none;
+    }
+
+    .content-view.active {
+      display: grid;
+    }
+
+    .boards-view.active {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    .calendar-view.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel h2 {
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .panel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .job-card {
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      border-left: 6px solid rgba(255,255,255,0.45);
+    }
+
+    .job-card.inbound {
+      background: linear-gradient(135deg, #b91c1c, #ef4444);
+    }
+
+    .job-card.outbound {
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    }
+
+    .job-card.neutral {
+      background: linear-gradient(135deg, #334155, #64748b);
+    }
+
+    .job-line-1 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .job-line-2,
+    .job-line-3,
+    .job-line-4 {
+      font-size: 0.88rem;
+      line-height: 1.3;
+      opacity: 0.98;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      font-weight: 700;
+      padding: 24px 10px;
+    }
+
+    .calendar-shell {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
     }
 
     .calendar-header {
       text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin: 0 0 4px 0;
-      line-height: 1.1;
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      flex-shrink: 0;
     }
 
-    .month-grid {
+    .calendar-grid {
+      flex: 1;
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      grid-template-rows: 22px repeat(5, 1fr);
-      gap: 1px;
-      background: #333;
-      border: 1px solid #333;
-      flex: 1 1 auto;
+      grid-template-rows: auto repeat(6, 1fr);
+      gap: 8px;
       min-height: 0;
     }
 
-    .weekday {
-      background: #1a1a1a;
-      color: #fff;
-      font-size: 11px;
-      font-weight: bold;
+    .day-name {
+      background: #dbeafe;
+      color: #0f172a;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.9rem;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 8px;
+      min-height: 40px;
     }
 
-    .day-cell {
-      background: #f3f3f3;
-      color: #000;
-      padding: 3px;
+    .calendar-day {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       overflow: hidden;
-      box-sizing: border-box;
     }
 
-    .day-empty {
-      background: #111;
+    .calendar-day.other-month {
+      background: #f1f5f9;
+      opacity: 0.55;
+    }
+
+    .calendar-day.today {
+      border: 2px solid var(--blue);
+      background: #eff6ff;
     }
 
     .day-number {
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 3px;
-      line-height: 1;
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      flex-shrink: 0;
     }
 
-    .event-chip {
-      font-size: 11px;
-      line-height: 1.15;
-      margin: 2px 0;
-      padding: 2px 4px;
-      border-radius: 2px;
+    .day-events {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 0;
       overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      font-weight: bold;
     }
 
-    .event-in {
-      background: #f7c7c7;
-      border-left: 3px solid #c62828;
-      color: #000;
+    .cal-event {
+      font-size: 0.68rem;
+      line-height: 1.15;
+      color: #fff;
+      border-radius: 8px;
+      padding: 4px 5px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
     }
 
-    .event-out {
-      background: #bbdefb;
-      border-left: 3px solid #1565c0;
-      color: #000;
+    .cal-event.inbound {
+      background: #dc2626;
     }
 
-    .empty-msg {
-      color: #888;
-      font-size: 18px;
-      padding: 8px 2px;
+    .cal-event.outbound {
+      background: #2563eb;
+    }
+
+    .cal-event.hold {
+      background: #b45309;
+    }
+
+    .cal-event.loading {
+      background: #2563eb;
+    }
+
+    .cal-event.ready {
+      background: #16a34a;
+    }
+
+    .cal-event.sched {
+      background: #64748b;
+    }
+
+    .cal-event.default {
+      background: #475569;
+    }
+
+    .footer-bar {
+      flex-shrink: 0;
+      padding: 8px 16px 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    @media (min-width: 1600px) {
+      .brand-text h1 {
+        font-size: 2.4rem;
+      }
+
+      .brand-logo {
+        width: 76px;
+        height: 76px;
+      }
+
+      .stat-value {
+        font-size: 2.8rem;
+      }
+
+      .panel h2,
+      .calendar-header {
+        font-size: 1.55rem;
+      }
+
+      .job-line-1 {
+        font-size: 1.15rem;
+      }
+
+      .job-line-2,
+      .job-line-3,
+      .job-line-4 {
+        font-size: 0.95rem;
+      }
+
+      .cal-event {
+        font-size: 0.76rem;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        height: auto;
+      }
+
+      .top-stats,
+      .boards-view.active {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-grid {
+        grid-template-columns: repeat(7, minmax(110px, 1fr));
+        overflow-x: auto;
+      }
     }
   </style>
 </head>
 <body>
-
-  <div id="boardWrapper">
-    <div class="title-bar">
-      <img src="logo.jpg" alt="Frozen Spot Logo" class="title-logo">
-      <div class="header">FROZEN SPOT OPERATIONS</div>
-    </div>
-
-    <div class="topbar">
-      <div class="counter">
-        <div class="counter-label">Arriving</div>
-        <div id="countArriving" class="counter-value">0</div>
+  <div class="app">
+    <header class="top-header">
+      <div class="header-inner">
+        <div class="brand-wrap">
+          <img src="/logo.png" alt="Frozen Spot Logo" class="brand-logo" />
+          <div class="brand-text">
+            <h1>FROZEN SPOT OPERATIONS</h1>
+            <p>Warehouse Dashboard</p>
+          </div>
+        </div>
       </div>
-      <div class="counter">
-        <div class="counter-label">Active Docks</div>
-        <div id="countLoading" class="counter-value">0</div>
-      </div>
-      <div class="counter">
-        <div class="counter-label">Departures</div>
-        <div id="countDepartures" class="counter-value">0</div>
-      </div>
-      <div class="counter">
-        <div class="counter-label">Late / Hold</div>
-        <div id="countLate" class="counter-value">0</div>
-      </div>
-    </div>
+    </header>
 
-    <div id="boardView" class="board-view">
-      <div class="section">
-        <h2>ARRIVING</h2>
-        <table id="arriving"></table>
+    <main class="main">
+      <section class="top-stats">
+        <div class="stat-card">
+          <div class="stat-title">Arriving</div>
+          <div class="stat-value" id="arrivingCount">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-title">Active Docks</div>
+          <div class="stat-value" id="activeDocksCount">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-title">Departures</div>
+          <div class="stat-value" id="departuresCount">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-title">Late / Hold</div>
+          <div class="stat-value" id="lateHoldCount">0</div>
+        </div>
+      </section>
+
+      <div class="view-wrap">
+        <div class="view-label" id="viewLabel">LIVE OPERATIONS</div>
+
+        <section class="content-view boards-view active" id="boardsView">
+          <div class="panel">
+            <h2>Arriving</h2>
+            <div class="panel-list" id="arrivingList"></div>
+          </div>
+
+          <div class="panel">
+            <h2>Active Docks</h2>
+            <div class="panel-list" id="activeDocksList"></div>
+          </div>
+
+          <div class="panel">
+            <h2>Departures</h2>
+            <div class="panel-list" id="departuresList"></div>
+          </div>
+        </section>
+
+        <section class="content-view calendar-view" id="calendarViewSection">
+          <div class="calendar-shell">
+            <div class="calendar-header" id="calendarTitle">Calendar</div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+        </section>
       </div>
+    </main>
 
-      <div class="section">
-        <h2>ACTIVE DOCKS</h2>
-        <table id="loading"></table>
-      </div>
-
-      <div class="section">
-        <h2>DEPARTURES</h2>
-        <table id="departures"></table>
-      </div>
-    </div>
-
-    <div class="footer">Warehouse Dashboard – Auto Refresh</div>
-  </div>
-
-  <div id="calendarView" class="calendar-view hidden">
-    <div id="calendarHeader" class="calendar-header"></div>
-    <div id="calendarGrid" class="month-grid"></div>
+    <div class="footer-bar" id="lastUpdated">Last updated: --</div>
   </div>
 
   <script>
-    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
+    /************************************************************
+     * IMPORTANT:
+     * Replace this with your Apps Script Web App URL
+     ************************************************************/
+    const SHEET_API_URL = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
 
-    const BOARD_SECONDS = 10;
-    const CALENDAR_SECONDS = 10;
+    /************************************************************
+     * SETTINGS
+     ************************************************************/
+    const REFRESH_MS = 30000;   // refresh data every 30 seconds
+    const TOGGLE_MS = 10000;    // toggle boards/calendar every 10 seconds
 
-    function parseCSV(text) {
-      const rows = [];
-      let row = [];
-      let cell = "";
-      let inQuotes = false;
+    let dashboardData = [];
+    let showingBoards = true;
 
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const nextChar = text[i + 1];
+    async function fetchDashboardData() {
+      if (!SHEET_API_URL || SHEET_API_URL.includes("PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE")) {
+        console.warn("Apps Script URL not set.");
+        return;
+      }
 
-        if (char === '"') {
-          if (inQuotes && nextChar === '"') {
-            cell += '"';
-            i++;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if (char === ',' && !inQuotes) {
-          row.push(cell);
-          cell = "";
-        } else if ((char === '\n' || char === '\r') && !inQuotes) {
-          if (char === '\r' && nextChar === '\n') i++;
-          row.push(cell);
-          if (row.some(c => c.trim() !== "")) rows.push(row);
-          row = [];
-          cell = "";
-        } else {
-          cell += char;
+      try {
+        const res = await fetch(SHEET_API_URL);
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          console.error("Expected array from API:", data);
+          return;
         }
-      }
 
-      if (cell.length > 0 || row.length > 0) {
-        row.push(cell);
-        if (row.some(c => c.trim() !== "")) rows.push(row);
-      }
-
-      return rows;
-    }
-
-    function clean(v) {
-      return (v || "").trim();
-    }
-
-    function normalize(v) {
-      return clean(v).toLowerCase().replace(/\s+/g, "");
-    }
-
-    function parseDate(dateStr) {
-      const value = clean(dateStr);
-      const parts = value.split("/");
-      if (parts.length !== 3) return null;
-      return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
-    }
-
-    function parseTimeMinutes(t) {
-      const value = clean(t);
-      if (!value) return 9999;
-
-      const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
-      if (!match) return 9999;
-
-      let hour = parseInt(match[1], 10);
-      const minute = parseInt(match[2], 10);
-      const ampm = match[3] ? match[3].toUpperCase() : null;
-
-      if (ampm === "PM" && hour !== 12) hour += 12;
-      if (ampm === "AM" && hour === 12) hour = 0;
-
-      return hour * 60 + minute;
-    }
-
-    function formatBoardDate(dateStr) {
-      const d = parseDate(dateStr);
-      if (!d) return clean(dateStr);
-      const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-      return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
-    }
-
-    function isLate(dateStr, timeStr, status) {
-      const normalized = normalize(status);
-      if (normalized === "complete" || normalized === "done") return false;
-
-      const rowDate = parseDate(dateStr);
-      if (!rowDate) return false;
-
-      const now = new Date();
-      if (rowDate.toDateString() !== now.toDateString()) return false;
-
-      const rowMins = parseTimeMinutes(timeStr);
-      const nowMins = now.getHours() * 60 + now.getMinutes();
-
-      return rowMins < nowMins;
-    }
-
-    function getWeekStart(d) {
-      const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const day = date.getDay();
-      date.setDate(date.getDate() - day);
-      date.setHours(0,0,0,0);
-      return date;
-    }
-
-    function getWeekEnd(d) {
-      const start = getWeekStart(d);
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      end.setHours(23,59,59,999);
-      return end;
-    }
-
-    function isInCurrentWeek(dateObj) {
-      if (!dateObj) return false;
-      const now = new Date();
-      const start = getWeekStart(now);
-      const end = getWeekEnd(now);
-      return dateObj >= start && dateObj <= end;
-    }
-
-    function getReferenceLabel(item) {
-      const ref = clean(item.reference);
-      if (!ref) return "";
-
-      if (normalize(item.cargo) === "export") return `BK# ${ref}`;
-      if (item.direction === "Arriving") return `PO# ${ref}`;
-      if (item.direction === "Leaving") return `BL# ${ref}`;
-      return ref;
-    }
-
-    function createBoardRow(item) {
-      return `
-        <tr class="status-${item.norm} ${item.late ? "late" : ""}">
-          <td>
-            <div class="time-block">
-              <span class="time-date">${formatBoardDate(item.date)}</span>
-              <span class="time-hour">${item.eta || ""}</span>
-            </div>
-          </td>
-          <td>
-            <span class="client-main">${item.client || "Unknown"}</span>
-            <span class="small">${item.container || ""}</span>
-            <span class="small">${item.cargo || ""} • ${item.country || ""} • ${item.temp || ""}</span>
-            ${item.reference ? `<span class="small">${getReferenceLabel(item)}</span>` : ""}
-          </td>
-          <td>Door ${item.door || "-"}</td>
-        </tr>
-      `;
-    }
-
-    function addEmptyMessage(tableId, message) {
-      const el = document.getElementById(tableId);
-      if (!el.innerHTML.trim()) {
-        el.innerHTML = `<tr><td colspan="3"><div class="empty-msg">${message}</div></td></tr>`;
+        dashboardData = data.map(normalizeRow);
+        renderDashboard();
+        updateLastUpdated();
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
       }
     }
 
-    function buildMonthCalendar(items) {
+    function normalizeRow(row) {
+      return {
+        priority: safeValue(row["Priority"]),
+        date: safeValue(row["Date"]),
+        eta: safeValue(row["ETA"]),
+        direction: safeValue(row["Direction"]),
+        cargoType: safeValue(row["Type of Cargo"]),
+        country: safeValue(row["Country"]),
+        container: safeValue(row["Container"]),
+        po: safeValue(row["PO / BL# / Booking#"]),
+        client: safeValue(row["Client"]),
+        temperature: safeValue(row["Temperature"]),
+        door: safeValue(row["Door"]),
+        status: safeValue(row["Status"]),
+        notes: safeValue(row["Notes"]),
+        completedAt: safeValue(row["Completed At"])
+      };
+    }
+
+    function safeValue(val) {
+      return val === undefined || val === null ? "" : String(val).trim();
+    }
+
+    function renderDashboard() {
+      const activeRows = dashboardData.filter(row => row.status.toLowerCase() !== "done");
+
+      const arriving = activeRows.filter(isArriving);
+      const departures = activeRows.filter(isLeaving);
+      const activeDocks = activeRows.filter(isActiveDock);
+      const lateHold = activeRows.filter(isLateOrHold);
+
+      setText("arrivingCount", arriving.length);
+      setText("activeDocksCount", activeDocks.length);
+      setText("departuresCount", departures.length);
+      setText("lateHoldCount", lateHold.length);
+
+      renderList("arrivingList", arriving, "arriving");
+      renderList("activeDocksList", activeDocks, "active");
+      renderList("departuresList", departures, "departures");
+
+      renderCalendar(activeRows);
+    }
+
+    function renderList(elementId, rows, type) {
+      const container = document.getElementById(elementId);
+      container.innerHTML = "";
+
+      if (!rows.length) {
+        container.innerHTML = `<div class="empty-state">No records</div>`;
+        return;
+      }
+
+      rows.slice(0, 12).forEach(row => {
+        const card = document.createElement("div");
+
+        let cardClass = "neutral";
+        if (isArriving(row)) cardClass = "inbound";
+        if (isLeaving(row)) cardClass = "outbound";
+
+        card.className = `job-card ${cardClass}`;
+        card.innerHTML = `
+          <div class="job-line-1">${escapeHtml(row.client || "No Client")}</div>
+          <div class="job-line-2"><strong>${escapeHtml(row.direction || "-")}</strong> | ${escapeHtml(row.cargoType || "-")} | ${escapeHtml(row.country || "-")}</div>
+          <div class="job-line-3">ETA: ${escapeHtml(row.eta || "-")} | Door: ${escapeHtml(row.door || "-")} | Status: ${escapeHtml(row.status || "-")}</div>
+          <div class="job-line-4">PO/BL#: ${escapeHtml(row.po || "-")} | Container: ${escapeHtml(row.container || "-")}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderCalendar(rows) {
       const calendarGrid = document.getElementById("calendarGrid");
-      const calendarHeader = document.getElementById("calendarHeader");
+      const calendarTitle = document.getElementById("calendarTitle");
       calendarGrid.innerHTML = "";
 
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
 
-      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-      calendarHeader.textContent = `${monthNames[month]} ${year}`;
+      const monthName = today.toLocaleString("en-US", { month: "long" });
+      calendarTitle.textContent = `${monthName} ${year}`;
 
-      const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      weekdays.forEach(day => {
-        const el = document.createElement("div");
-        el.className = "weekday";
-        el.textContent = day;
-        calendarGrid.appendChild(el);
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      dayNames.forEach(day => {
+        const dayCell = document.createElement("div");
+        dayCell.className = "day-name";
+        dayCell.textContent = day;
+        calendarGrid.appendChild(dayCell);
       });
 
-      const firstOfMonth = new Date(year, month, 1);
-      const lastOfMonth = new Date(year, month + 1, 0);
-      const firstDayOffset = firstOfMonth.getDay();
-      const totalDays = lastOfMonth.getDate();
-      const totalCells = totalDays + firstDayOffset;
-      const totalRows = Math.ceil(totalCells / 7);
+      const firstDay = new Date(year, month, 1);
+      const startDayIndex = firstDay.getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
 
-      const itemsByDate = {};
-      items.forEach(item => {
-        if (!item.parsedDate) return;
-        if (item.parsedDate.getFullYear() !== year || item.parsedDate.getMonth() !== month) return;
+      const calendarRows = [];
 
-        const key = `${item.parsedDate.getFullYear()}-${item.parsedDate.getMonth()+1}-${item.parsedDate.getDate()}`;
-        if (!itemsByDate[key]) itemsByDate[key] = [];
-        itemsByDate[key].push(item);
-      });
+      for (let i = 0; i < 42; i++) {
+        let dayNumber, cellDate, otherMonth = false;
 
-      for (let i = 0; i < totalRows * 7; i++) {
-        const cell = document.createElement("div");
-        cell.className = "day-cell";
-
-        const dayIndex = i - firstDayOffset + 1;
-
-        if (dayIndex < 1 || dayIndex > totalDays) {
-          cell.classList.add("day-empty");
-          calendarGrid.appendChild(cell);
-          continue;
+        if (i < startDayIndex) {
+          dayNumber = daysInPrevMonth - startDayIndex + i + 1;
+          cellDate = new Date(year, month - 1, dayNumber);
+          otherMonth = true;
+        } else if (i >= startDayIndex + daysInMonth) {
+          dayNumber = i - (startDayIndex + daysInMonth) + 1;
+          cellDate = new Date(year, month + 1, dayNumber);
+          otherMonth = true;
+        } else {
+          dayNumber = i - startDayIndex + 1;
+          cellDate = new Date(year, month, dayNumber);
         }
 
-        const dayNumber = document.createElement("div");
-        dayNumber.className = "day-number";
-        dayNumber.textContent = dayIndex;
-        cell.appendChild(dayNumber);
+        calendarRows.push({
+          dayNumber,
+          cellDate,
+          otherMonth
+        });
+      }
 
-        const key = `${year}-${month+1}-${dayIndex}`;
-        const dayItems = (itemsByDate[key] || []).sort((a,b) => a.sortTime - b.sortTime);
+      calendarRows.forEach(item => {
+        const cell = document.createElement("div");
+        const isToday = sameDate(item.cellDate, today);
 
-        const grouped = {};
-        dayItems.forEach(item => {
-          const directionLabel = item.direction === "Arriving" ? "IN" : "OUT";
-          const cargoLabel = item.cargo || "";
-          const clientLabel = item.client || "Unknown";
-          const refLabel = getReferenceLabel(item);
-          const groupKey = `${clientLabel}||${directionLabel}||${cargoLabel}||${refLabel}`;
+        cell.className = `calendar-day${item.otherMonth ? " other-month" : ""}${isToday ? " today" : ""}`;
 
-          if (!grouped[groupKey]) {
-            grouped[groupKey] = {
-              client: clientLabel,
-              directionLabel,
-              cargo: cargoLabel,
-              refLabel,
-              count: 0
-            };
-          }
-          grouped[groupKey].count += 1;
+        const events = rows.filter(row => {
+          const rowDate = parseSheetDate(row.date);
+          return rowDate && sameDate(rowDate, item.cellDate);
         });
 
-        Object.values(grouped).forEach(group => {
-          const chip = document.createElement("div");
-          const isIn = group.directionLabel === "IN";
-          chip.className = "event-chip " + (isIn ? "event-in" : "event-out");
+        const eventsHtml = events.slice(0, 4).map(row => {
+          const dirClass = isArriving(row) ? "inbound" : isLeaving(row) ? "outbound" : "default";
+          const statusClass = getStatusClass(row.status);
+          const finalClass = statusClass !== "default" ? statusClass : dirClass;
 
-          const countSuffix = group.count > 1 ? ` x${group.count}` : "";
-          const refSuffix = group.refLabel ? ` ${group.refLabel}` : "";
-          chip.textContent = `${group.client}-${group.directionLabel}(${group.cargo})${refSuffix}${countSuffix}`;
+          return `
+            <div class="cal-event ${finalClass}">
+              ${escapeHtml(row.eta || "")} ${escapeHtml(row.client || "")}<br>
+              ${escapeHtml(row.po || "-")}
+            </div>
+          `;
+        }).join("");
 
-          cell.appendChild(chip);
-        });
+        cell.innerHTML = `
+          <div class="day-number">${item.dayNumber}</div>
+          <div class="day-events">
+            ${eventsHtml}
+          </div>
+        `;
 
         calendarGrid.appendChild(cell);
+      });
+    }
+
+    function parseSheetDate(value) {
+      if (!value) return null;
+
+      const direct = new Date(value);
+      if (!isNaN(direct.getTime())) {
+        return new Date(direct.getFullYear(), direct.getMonth(), direct.getDate());
       }
-    }
 
-    function showBoard() {
-      document.getElementById("boardWrapper").classList.remove("hidden");
-      document.getElementById("calendarView").classList.add("hidden");
-    }
-
-    function showCalendar() {
-      document.getElementById("boardWrapper").classList.add("hidden");
-      document.getElementById("calendarView").classList.remove("hidden");
-    }
-
-    function startAutoToggle() {
-      let showingBoard = true;
-      showBoard();
-
-      function cycle() {
-        if (showingBoard) {
-          setTimeout(() => {
-            showCalendar();
-            showingBoard = false;
-            cycle();
-          }, BOARD_SECONDS * 1000);
-        } else {
-          setTimeout(() => {
-            showBoard();
-            showingBoard = true;
-            cycle();
-          }, CALENDAR_SECONDS * 1000);
+      const parts = String(value).split(/[\/\-]/);
+      if (parts.length === 3) {
+        const month = parseInt(parts[0], 10) - 1;
+        const day = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+          return new Date(year, month, day);
         }
       }
 
-      cycle();
+      return null;
     }
 
-    fetch(url)
-      .then(r => r.text())
-      .then(text => {
-        const rows = parseCSV(text);
-        rows.shift();
+    function sameDate(a, b) {
+      return (
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+      );
+    }
 
-        const arriving = [];
-        const loading = [];
-        const departures = [];
-        const allItems = [];
+    function isArriving(row) {
+      return row.direction.toLowerCase() === "arriving";
+    }
 
-        let lateCount = 0;
+    function isLeaving(row) {
+      return row.direction.toLowerCase() === "leaving";
+    }
 
-        rows.forEach(r => {
-          // A 0  Priority
-          // B 1  Date
-          // C 2  ETA
-          // D 3  Direction
-          // E 4  Type of Cargo
-          // F 5  Country
-          // G 6  Container
-          // H 7  PO / BL# / Booking#
-          // I 8  Client
-          // J 9  Temperature
-          // K 10 Door
-          // L 11 Status
-          // M 12 Notes
-          // N 13 Completed At
+    function isActiveDock(row) {
+      const status = row.status.toLowerCase();
+      return ["loading", "ready"].includes(status) || row.door !== "";
+    }
 
-          const date = clean(r[1]);
-          const eta = clean(r[2]);
-          const direction = clean(r[3]);
-          const cargo = clean(r[4]);
-          const country = clean(r[5]);
-          const container = clean(r[6]);
-          const reference = clean(r[7]);
-          const client = clean(r[8]);
-          const temp = clean(r[9]);
-          const door = clean(r[10]);
-          const status = clean(r[11]);
+    function isLateOrHold(row) {
+      const status = row.status.toLowerCase();
+      return status === "hold" || isLate(row);
+    }
 
-          if (!date && !eta && !direction && !container && !client) return;
-          if (normalize(status) === "done" || normalize(status) === "complete") return;
+    function isLate(row) {
+      if (!row.date) return false;
 
-          const parsedDate = parseDate(date);
-          const norm = normalize(status);
-          const late = isLate(date, eta, status) || norm.includes("hold") || norm.includes("problem");
+      const rowDate = parseSheetDate(row.date);
+      if (!rowDate) return false;
 
-          if (late) lateCount++;
+      const today = new Date();
+      const cleanToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      return rowDate < cleanToday && row.status.toLowerCase() !== "done";
+    }
 
-          const item = {
-            date,
-            eta,
-            direction,
-            cargo,
-            country,
-            container,
-            reference,
-            client,
-            temp,
-            door,
-            status,
-            norm,
-            late,
-            parsedDate,
-            sortDate: parsedDate ? parsedDate.getTime() : Number.MAX_SAFE_INTEGER,
-            sortTime: parseTimeMinutes(eta)
-          };
+    function getStatusClass(status) {
+      const s = String(status || "").toLowerCase();
 
-          allItems.push(item);
+      if (s === "hold") return "hold";
+      if (s === "loading") return "loading";
+      if (s === "ready") return "ready";
+      if (s === "sched") return "sched";
+      return "default";
+    }
 
-          if (isInCurrentWeek(parsedDate)) {
-            if (direction === "Arriving") arriving.push(item);
-            if (direction === "Leaving") departures.push(item);
-            if (norm.includes("loading") || norm.includes("unloading") || norm.includes("ready")) loading.push(item);
-          }
-        });
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
 
-        const sorter = (a,b) => {
-          if (a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
-          return a.sortTime - b.sortTime;
-        };
+    function updateLastUpdated() {
+      const now = new Date();
+      document.getElementById("lastUpdated").textContent =
+        `Last updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+    }
 
-        arriving.sort(sorter);
-        loading.sort(sorter);
-        departures.sort(sorter);
-        allItems.sort(sorter);
+    function toggleView() {
+      showingBoards = !showingBoards;
 
-        arriving.forEach(item => {
-          document.getElementById("arriving").insertAdjacentHTML("beforeend", createBoardRow(item));
-        });
+      const boardsView = document.getElementById("boardsView");
+      const calendarViewSection = document.getElementById("calendarViewSection");
+      const viewLabel = document.getElementById("viewLabel");
 
-        loading.forEach(item => {
-          document.getElementById("loading").insertAdjacentHTML("beforeend", createBoardRow(item));
-        });
+      if (showingBoards) {
+        boardsView.classList.add("active");
+        calendarViewSection.classList.remove("active");
+        viewLabel.textContent = "LIVE OPERATIONS";
+      } else {
+        boardsView.classList.remove("active");
+        calendarViewSection.classList.add("active");
+        viewLabel.textContent = "MONTHLY CALENDAR";
+      }
+    }
 
-        departures.forEach(item => {
-          document.getElementById("departures").insertAdjacentHTML("beforeend", createBoardRow(item));
-        });
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-        addEmptyMessage("arriving", "No arrivals this week");
-        addEmptyMessage("loading", "No active docks this week");
-        addEmptyMessage("departures", "No departures this week");
-
-        document.getElementById("countArriving").textContent = arriving.length;
-        document.getElementById("countLoading").textContent = loading.length;
-        document.getElementById("countDepartures").textContent = departures.length;
-        document.getElementById("countLate").textContent = lateCount;
-
-        buildMonthCalendar(allItems);
-        startAutoToggle();
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById("arriving").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Could not load dashboard data</div></td></tr>`;
-        document.getElementById("loading").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Check published CSV link</div></td></tr>`;
-        document.getElementById("departures").innerHTML = `<tr><td colspan="3"><div class="empty-msg">See browser console for details</div></td></tr>`;
-      });
-
-    setTimeout(() => location.reload(), 60000);
+    /************************************************************
+     * START
+     ************************************************************/
+    fetchDashboardData();
+    setInterval(fetchDashboardData, REFRESH_MS);
+    setInterval(toggleView, TOGGLE_MS);
   </script>
 </body>
 </html>
