@@ -127,10 +127,10 @@
 
     .time-date {
       display: block;
-      font-size: 16px;
-      color: #64748b;
+      font-size: 22px;
+      color: #0f172a;
       margin-bottom: 4px;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .time-hour {
@@ -150,10 +150,21 @@
 
     .small {
       display: block;
-      font-size: 13px;
-      color: #64748b;
-      margin-top: 2px;
-      line-height: 1.2;
+      font-size: 16px;
+      color: #1e293b;
+      margin-top: 3px;
+      line-height: 1.3;
+      font-weight: 600;
+    }
+
+    .notes {
+      display: block;
+      font-size: 15px;
+      color: #334155;
+      margin-top: 4px;
+      font-style: italic;
+      font-weight: 600;
+      line-height: 1.3;
     }
 
     .footer {
@@ -300,8 +311,18 @@
         font-size: 34px;
       }
 
+      .time-date,
+      .time-hour,
       .client-main {
         font-size: 24px;
+      }
+
+      .small {
+        font-size: 17px;
+      }
+
+      .notes {
+        font-size: 16px;
       }
 
       td {
@@ -510,6 +531,7 @@
             <span class="small">${item.container || ""}</span>
             <span class="small">${item.cargo || ""} • ${item.country || ""} • ${item.temp || ""}</span>
             ${item.reference ? `<span class="small">${getReferenceLabel(item)}</span>` : ""}
+            ${item.notes ? `<span class="notes">${item.notes}</span>` : ""}
           </td>
           <td>Door ${item.door || "-"}</td>
         </tr>
@@ -689,6 +711,7 @@
           const temp = clean(r[9]);
           const door = clean(r[10]);
           const status = clean(r[11]);
+          const notes = clean(r[12]);
 
           if (!date && !eta && !direction && !container && !client) return;
           if (normalize(status) === "done" || normalize(status) === "complete") return;
@@ -711,6 +734,7 @@
             temp,
             door,
             status,
+            notes,
             norm,
             late,
             parsedDate,
