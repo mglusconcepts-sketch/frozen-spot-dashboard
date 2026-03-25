@@ -23,7 +23,6 @@
     display: none !important;
   }
 
-  /* BOARD LAYOUT */
   .header {
     text-align: center;
     font-size: 46px;
@@ -119,7 +118,6 @@
     color: #bbb;
   }
 
-  /* BOARD COLORS */
   .status-loading td,
   .status-unloading td {
     background: rgba(255, 193, 7, 0.28);
@@ -149,7 +147,6 @@
     font-weight: bold;
   }
 
-  /* CALENDAR VIEW */
   .calendar-view {
     height: calc(100vh - 16px);
     display: flex;
@@ -166,7 +163,6 @@
     font-weight: bold;
     margin: 0 0 4px 0;
     line-height: 1.1;
-    flex: 0 0 auto;
   }
 
   .month-grid {
@@ -210,7 +206,7 @@
   }
 
   .event-chip {
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.15;
     margin: 2px 0;
     padding: 2px 4px;
@@ -289,7 +285,6 @@ const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnN
 const BOARD_SECONDS = 10;
 const CALENDAR_SECONDS = 10;
 
-/* CSV PARSER */
 function parseCSV(text) {
   const rows = [];
   let row = [];
@@ -408,6 +403,16 @@ function isInCurrentWeek(dateObj) {
   return dateObj >= start && dateObj <= end;
 }
 
+function getReferenceLabel(item) {
+  const ref = clean(item.reference);
+  if (!ref) return "";
+
+  if (normalize(item.cargo) === "export") return `BK# ${ref}`;
+  if (item.direction === "Arriving") return `PO# ${ref}`;
+  if (item.direction === "Leaving") return `BL# ${ref}`;
+  return ref;
+}
+
 function createBoardRow(item) {
   return `
     <tr class="status-${item.norm} ${item.late ? "late" : ""}">
@@ -421,6 +426,7 @@ function createBoardRow(item) {
         ${item.container}
         <span class="small">${item.client}</span>
         <span class="small">${item.cargo} • ${item.country} • ${item.temp}</span>
+        ${item.reference ? `<span class="small">${getReferenceLabel(item)}</span>` : ""}
       </td>
       <td>Door ${item.door}</td>
     </tr>
@@ -489,13 +495,15 @@ function buildMonthCalendar(items) {
       const directionLabel = item.direction === "Arriving" ? "IN" : "OUT";
       const cargoLabel = item.cargo || "";
       const clientLabel = item.client || "Unknown";
-      const groupKey = `${clientLabel}||${directionLabel}||${cargoLabel}`;
+      const refLabel = getReferenceLabel(item);
+      const groupKey = `${clientLabel}||${directionLabel}||${cargoLabel}||${refLabel}`;
 
       if (!grouped[groupKey]) {
         grouped[groupKey] = {
           client: clientLabel,
           directionLabel,
           cargo: cargoLabel,
+          refLabel,
           count: 0
         };
       }
@@ -508,7 +516,8 @@ function buildMonthCalendar(items) {
       chip.className = "event-chip " + (isIn ? "event-in" : "event-out");
 
       const countSuffix = group.count > 1 ? ` x${group.count}` : "";
-      chip.textContent = `${group.client}-${group.directionLabel}(${group.cargo})${countSuffix}`;
+      const refSuffix = group.refLabel ? ` ${group.refLabel}` : "";
+      chip.textContent = `${group.client}-${group.directionLabel}(${group.cargo})${refSuffix}${countSuffix}`;
 
       cell.appendChild(chip);
     });
@@ -564,18 +573,20 @@ fetch(url)
     let lateCount = 0;
 
     rows.forEach(r => {
-      // 0 Priority
-      // 1 Date
-      // 2 ETA
-      // 3 Direction
-      // 4 Type of Cargo
-      // 5 Country
-      // 6 Container
-      // 7 Client
-      // 8 Temperature
-      // 9 Door
-      // 10 Status
-      // 11 Notes
+      // A 0  Priority
+      // B 1  Date
+      // C 2  ETA
+      // D 3  Direction
+      // E 4  Type of Cargo
+      // F 5  Country
+      // G 6  Container
+      // H 7  PO / BL# / Booking#
+      // I 8  Client
+      // J 9  Temperature
+      // K 10 Door
+      // L 11 Status
+      // M 12 Notes
+      // N 13 Completed At
 
       const date = clean(r[1]);
       const eta = clean(r[2]);
@@ -583,12 +594,13 @@ fetch(url)
       const cargo = clean(r[4]);
       const country = clean(r[5]);
       const container = clean(r[6]);
-      const client = clean(r[7]);
-      const temp = clean(r[8]);
-      const door = clean(r[9]);
-      const status = clean(r[10]);
+      const reference = clean(r[7]);
+      const client = clean(r[8]);
+      const temp = clean(r[9]);
+      const door = clean(r[10]);
+      const status = clean(r[11]);
 
-      if (!date && !eta && !direction && !container) return;
+      if (!date && !eta && !direction && !container && !client) return;
 
       const parsedDate = parseDate(date);
       const norm = normalize(status);
@@ -603,6 +615,7 @@ fetch(url)
         cargo,
         country,
         container,
+        reference,
         client,
         temp,
         door,
