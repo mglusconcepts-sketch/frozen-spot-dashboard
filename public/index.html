@@ -8,8 +8,8 @@
     html, body {
       margin: 0;
       padding: 0;
-      background: #eef3f9;
-      color: #0f172a;
+      background: #000;
+      color: #fff;
       font-family: Arial, sans-serif;
       overflow: hidden;
       height: 100%;
@@ -17,7 +17,7 @@
 
     body {
       box-sizing: border-box;
-      padding: 12px 14px;
+      padding: 8px;
     }
 
     .hidden {
@@ -28,84 +28,68 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
-      margin: 4px 0 12px 0;
-      padding: 14px 18px;
-      border-radius: 14px;
-      background: linear-gradient(90deg, #0b1220, #163d77 50%, #0b1220);
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+      gap: 14px;
+      margin: 4px 0 8px 0;
     }
 
     .title-logo {
-      width: 66px;
-      height: 66px;
+      width: 56px;
+      height: 56px;
       object-fit: contain;
-      border-radius: 12px;
-      background: #ffffff;
-      padding: 5px;
+      border-radius: 8px;
+      background: transparent;
       flex: 0 0 auto;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
     }
 
     .header {
-      text-align: left;
+      text-align: center;
       font-size: 42px;
       font-weight: bold;
       line-height: 1;
       margin: 0;
-      color: #ffffff;
-      letter-spacing: 1px;
     }
 
     .topbar {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 10px;
     }
 
     .counter {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 10px;
+      background: #111;
+      border-radius: 6px;
+      padding: 8px;
       text-align: center;
-      border: 1px solid #d9e2ec;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
     }
 
     .counter-label {
       font-size: 16px;
-      color: #64748b;
-      font-weight: 700;
+      color: #bbb;
     }
 
     .counter-value {
-      font-size: 30px;
+      font-size: 28px;
       font-weight: bold;
       line-height: 1.1;
-      color: #0f172a;
     }
 
     .board-view {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
     }
 
     .section {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 12px;
+      background: #111;
+      border-radius: 6px;
+      padding: 10px;
       min-height: 280px;
-      border: 1px solid #d9e2ec;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
     }
 
     .section h2 {
-      margin: 0 0 10px 0;
+      margin: 0 0 8px 0;
       font-size: 24px;
-      color: #0f172a;
-      text-align: center;
     }
 
     table {
@@ -116,9 +100,8 @@
     td {
       padding: 10px 6px;
       font-size: 18px;
-      border-bottom: 1px solid #e5edf5;
+      border-bottom: 1px solid #222;
       vertical-align: top;
-      color: #0f172a;
     }
 
     .time-block {
@@ -127,119 +110,103 @@
 
     .time-date {
       display: block;
-      font-size: 22px;
-      color: #0f172a;
+      font-size: 16px;
+      color: #bbb;
       margin-bottom: 4px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .time-hour {
       display: block;
       font-size: 22px;
       font-weight: bold;
-      color: #0f172a;
     }
 
     .client-main {
       display: block;
       font-size: 22px;
       font-weight: 700;
-      color: #0f172a;
+      color: #fff;
       margin-bottom: 4px;
     }
 
     .small {
       display: block;
-      font-size: 16px;
-      color: #1e293b;
-      margin-top: 3px;
-      line-height: 1.3;
-      font-weight: 600;
-    }
-
-    .notes {
-      display: block;
-      font-size: 15px;
-      color: #334155;
-      margin-top: 4px;
-      font-style: italic;
-      font-weight: 600;
-      line-height: 1.3;
+      font-size: 13px;
+      color: #bbb;
+      margin-top: 2px;
+      line-height: 1.2;
     }
 
     .footer {
       text-align: center;
-      margin-top: 10px;
+      margin-top: 8px;
       font-size: 16px;
-      color: #64748b;
-      font-weight: 700;
+      color: #bbb;
     }
 
     .status-loading td,
     .status-unloading td {
-      background: #fff4cc;
-      color: #8a5a00;
+      background: rgba(255, 193, 7, 0.28);
+      color: #ffe082;
     }
 
     .status-complete td {
-      color: #94a3b8;
+      color: #888;
     }
 
     .status-hold td,
     .status-problem td {
-      background: #ffd9d9;
-      color: #9f1239;
+      background: rgba(244, 67, 54, 0.35);
+      color: #ffb3b3;
       font-weight: bold;
     }
 
     .status-checkedin td,
     .status-checked-in td,
     .status-ready td {
-      background: #dcfce7;
-      color: #166534;
+      background: rgba(76, 175, 80, 0.20);
+      color: #d7ffd9;
     }
 
     .late td {
-      background: #fecaca !important;
-      color: #991b1b !important;
+      background: rgba(211, 47, 47, 0.45) !important;
+      color: #ffd0d0 !important;
       font-weight: bold;
     }
 
     .calendar-view {
-      height: calc(100vh - 24px);
+      height: calc(100vh - 16px);
       display: flex;
       flex-direction: column;
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 8px;
+      background: #111;
+      border-radius: 6px;
+      padding: 4px;
       box-sizing: border-box;
-      border: 1px solid #d9e2ec;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
     }
 
     .calendar-header {
       text-align: center;
-      font-size: 26px;
+      font-size: 24px;
       font-weight: bold;
-      margin: 0 0 8px 0;
+      margin: 0 0 4px 0;
       line-height: 1.1;
-      color: #0f172a;
     }
 
     .month-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      grid-template-rows: 28px repeat(5, 1fr);
-      gap: 2px;
-      background: #cfd8e3;
-      border: 1px solid #cfd8e3;
+      grid-template-rows: 22px repeat(5, 1fr);
+      gap: 1px;
+      background: #333;
+      border: 1px solid #333;
       flex: 1 1 auto;
       min-height: 0;
     }
 
     .weekday {
-      background: #dbeafe;
-      color: #0f172a;
+      background: #1a1a1a;
+      color: #fff;
       font-size: 11px;
       font-weight: bold;
       display: flex;
@@ -248,31 +215,30 @@
     }
 
     .day-cell {
-      background: #f8fbff;
+      background: #f3f3f3;
       color: #000;
-      padding: 4px;
+      padding: 3px;
       overflow: hidden;
       box-sizing: border-box;
     }
 
     .day-empty {
-      background: #edf2f7;
+      background: #111;
     }
 
     .day-number {
       font-size: 12px;
       font-weight: bold;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       line-height: 1;
-      color: #0f172a;
     }
 
     .event-chip {
       font-size: 11px;
       line-height: 1.15;
       margin: 2px 0;
-      padding: 3px 5px;
-      border-radius: 4px;
+      padding: 2px 4px;
+      border-radius: 2px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -280,54 +246,21 @@
     }
 
     .event-in {
-      background: #fee2e2;
+      background: #f7c7c7;
       border-left: 3px solid #c62828;
-      color: #111827;
+      color: #000;
     }
 
     .event-out {
-      background: #dbeafe;
+      background: #bbdefb;
       border-left: 3px solid #1565c0;
-      color: #111827;
+      color: #000;
     }
 
     .empty-msg {
-      color: #64748b;
+      color: #888;
       font-size: 18px;
       padding: 8px 2px;
-    }
-
-    @media (min-width: 1600px) {
-      .header {
-        font-size: 46px;
-      }
-
-      .title-logo {
-        width: 74px;
-        height: 74px;
-      }
-
-      .counter-value {
-        font-size: 34px;
-      }
-
-      .time-date,
-      .time-hour,
-      .client-main {
-        font-size: 24px;
-      }
-
-      .small {
-        font-size: 17px;
-      }
-
-      .notes {
-        font-size: 16px;
-      }
-
-      td {
-        font-size: 19px;
-      }
     }
   </style>
 </head>
@@ -335,7 +268,7 @@
 
   <div id="boardWrapper">
     <div class="title-bar">
-      <img src="/logo.png" alt="Frozen Spot Logo" class="title-logo">
+      <img src="logo.jpg" alt="Frozen Spot Logo" class="title-logo">
       <div class="header">FROZEN SPOT OPERATIONS</div>
     </div>
 
@@ -483,27 +416,15 @@
       return rowMins < nowMins;
     }
 
-    function getWeekStart(d) {
-      const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const day = date.getDay();
-      date.setDate(date.getDate() - day);
-      date.setHours(0,0,0,0);
-      return date;
-    }
-
-    function getWeekEnd(d) {
-      const start = getWeekStart(d);
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      end.setHours(23,59,59,999);
-      return end;
-    }
-
-    function isInCurrentWeek(dateObj) {
+    function isInRollingWeek(dateObj) {
       if (!dateObj) return false;
+
       const now = new Date();
-      const start = getWeekStart(now);
-      const end = getWeekEnd(now);
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+      end.setHours(23, 59, 59, 999);
+
       return dateObj >= start && dateObj <= end;
     }
 
@@ -531,7 +452,7 @@
             <span class="small">${item.container || ""}</span>
             <span class="small">${item.cargo || ""} • ${item.country || ""} • ${item.temp || ""}</span>
             ${item.reference ? `<span class="small">${getReferenceLabel(item)}</span>` : ""}
-            ${item.notes ? `<span class="notes">${item.notes}</span>` : ""}
+            ${item.notes ? `<span class="small">Notes: ${item.notes}</span>` : ""}
           </td>
           <td>Door ${item.door || "-"}</td>
         </tr>
@@ -744,7 +665,7 @@
 
           allItems.push(item);
 
-          if (isInCurrentWeek(parsedDate)) {
+          if (isInRollingWeek(parsedDate)) {
             if (direction === "Arriving") arriving.push(item);
             if (direction === "Leaving") departures.push(item);
             if (norm.includes("loading") || norm.includes("unloading") || norm.includes("ready")) loading.push(item);
@@ -773,9 +694,9 @@
           document.getElementById("departures").insertAdjacentHTML("beforeend", createBoardRow(item));
         });
 
-        addEmptyMessage("arriving", "No arrivals this week");
-        addEmptyMessage("loading", "No active docks this week");
-        addEmptyMessage("departures", "No departures this week");
+        addEmptyMessage("arriving", "No arrivals in next 7 days");
+        addEmptyMessage("loading", "No active docks in next 7 days");
+        addEmptyMessage("departures", "No departures in next 7 days");
 
         document.getElementById("countArriving").textContent = arriving.length;
         document.getElementById("countLoading").textContent = loading.length;
