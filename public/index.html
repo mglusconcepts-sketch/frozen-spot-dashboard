@@ -164,7 +164,6 @@
       margin-top: 4px;
       font-style: italic;
       font-weight: 600;
-      line-height: 1.3;
     }
 
     .footer {
@@ -508,8 +507,11 @@
       const ref = clean(item.reference);
       if (!ref) return "";
 
-      if (normalize(item.cargo) === "export") return `BK# ${ref}`;
+      const cargoType = normalize(item.cargo);
+
+      if (cargoType === "export") return `BK# ${ref}`;
       if (item.direction === "Arriving") return `PO# ${ref}`;
+      if (item.direction === "Leaving" && cargoType === "storage") return `PO#/BL# ${ref}`;
       if (item.direction === "Leaving") return `BL# ${ref}`;
       return ref;
     }
@@ -517,7 +519,7 @@
     function createBoardRow(item) {
       const referenceLabel = getReferenceLabel(item);
       const referenceHtml = referenceLabel ? `<span class="small">${referenceLabel}</span>` : "";
-      const notesHtml = item.notes ? `<span class="notes">Notes: ${item.notes}</span>` : "";
+      const notesHtml = item.notes ? `<span class="notes">${item.notes}</span>` : "";
 
       return `
         <tr class="status-${item.norm} ${item.late ? "late" : ""}">
@@ -686,21 +688,6 @@
         let lateCount = 0;
 
         rows.forEach(r => {
-          // A 0  Priority
-          // B 1  Date
-          // C 2  ETA
-          // D 3  Direction
-          // E 4  Type of Cargo
-          // F 5  Country
-          // G 6  Container
-          // H 7  PO / BL# / Booking#
-          // I 8  Client
-          // J 9  Temperature
-          // K 10 Door
-          // L 11 Status
-          // M 12 Notes
-          // N 13 Completed At
-
           const date = clean(r[1]);
           const eta = clean(r[2]);
           const direction = clean(r[3]);
