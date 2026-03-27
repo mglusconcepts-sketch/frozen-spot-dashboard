@@ -659,10 +659,15 @@
             sortTime: parseTimeMinutes(eta)
           };
 
+          // Arriving and Departures stay on rolling week filter
           if (isInRollingWeek(parsedDate)) {
             if (direction === "Arriving") arriving.push(item);
             if (direction === "Leaving") departures.push(item);
-            if (norm.includes("loading") || norm.includes("unloading") || norm.includes("ready")) loading.push(item);
+          }
+
+          // Active Docks should always show active loading/unloading/ready rows, even if older date
+          if (norm.includes("loading") || norm.includes("unloading") || norm.includes("ready")) {
+            loading.push(item);
           }
         });
 
@@ -688,7 +693,7 @@
         });
 
         addEmptyMessage("arriving", "No arrivals in rolling week");
-        addEmptyMessage("loading", "No active docks in rolling week");
+        addEmptyMessage("loading", "No active docks");
         addEmptyMessage("departures", "No departures in rolling week");
 
         document.getElementById("countArriving").textContent = arriving.length;
