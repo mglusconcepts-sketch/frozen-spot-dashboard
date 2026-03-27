@@ -1,760 +1,362 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Frozen Spot Operations</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #eef3f9;
-      color: #0f172a;
-      font-family: Arial, sans-serif;
-      overflow: hidden;
-      height: 100%;
-    }
+const MAIN_SHEET_ID = "1cWbF4ZNVOEwoPKTAx4LlSr3Dq5X3tgbigRCkBNOahGw";
+const MAIN_TAB_NAME = "Ops";
+const ARCHIVE_TAB_NAME = "Archive";
 
-    body {
-      box-sizing: border-box;
-      padding: 12px 14px;
-    }
+function onFormSubmit(e) {
+  const answers = getFormAnswers_(e);
 
-    .hidden {
-      display: none !important;
-    }
+  const refValue = answers["PO / BL / BK"] || "";
+  const clientValue = answers["Client Name"] || "";
+  const actionValue = answers["Action"] || "";
+  const doorValue = answers["Door"] || "";
+  const noteDropdownValue = answers["Notes"] || "";
+  const additionalNotesValue = answers["Additional Notes"] || "";
+  const employeeValue = answers["Employee Name / Initials"] || "";
+  const submittedAt = new Date();
 
-    .title-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      margin: 4px 0 12px 0;
-      padding: 14px 18px;
-      border-radius: 14px;
-      background: linear-gradient(90deg, #0b1220, #163d77 50%, #0b1220);
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
-      overflow: hidden;
-    }
+  if (!clientValue) {
+    throw new Error("Client Name is required.");
+  }
 
-    .title-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      min-width: 0;
-      flex-shrink: 0;
-    }
+  if (!actionValue) {
+    throw new Error("Action is required.");
+  }
 
-    .title-logo {
-      width: 66px;
-      height: 66px;
-      object-fit: contain;
-      border-radius: 12px;
-      background: #ffffff;
-      padding: 5px;
-      flex: 0 0 auto;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-    }
+  const ss = SpreadsheetApp.openById(MAIN_SHEET_ID);
+  const sheet = ss.getSheetByName(MAIN_TAB_NAME);
+  const archiveSheet = ss.getSheetByName(ARCHIVE_TAB_NAME);
 
-    .legend-box {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.10);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 10px;
-      padding: 8px 10px;
-      min-width: 195px;
-    }
+  if (!sheet) {
+    throw new Error(`Sheet tab "${MAIN_TAB_NAME}" not found.`);
+  }
 
-    .legend-title {
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
-    }
+  if (!archiveSheet) {
+    throw new Error(`Archive tab "${ARCHIVE_TAB_NAME}" not found.`);
+  }
 
-    .legend-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px 10px;
-    }
+  const range = sheet.getDataRange();
+  const values = range.getValues();
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
+  if (values.length < 2) {
+    throw new Error("Ops sheet has no data rows.");
+  }
 
-    .legend-swatch {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-      border: 1px solid rgba(255, 255, 255, 0.45);
-      flex-shrink: 0;
-    }
+  const headers = values[0];
+  const col = getColumnMap_(headers);
 
-    .swatch-red {
-      background: #ef4444;
-    }
+  const matchedRow = findStrictTodayMatchingRow_(values, col, {
+    refValue,
+    clientValue,
+    noteDropdownValue
+  });
 
-    .swatch-green {
-      background: #22c55e;
-    }
+  if (!matchedRow) {
+    throw new Error(
+      "No exact matching row found for today. If the load has PO / BL / BK and Notes in Ops, both must be selected in the form."
+    );
+  }
 
-    .swatch-blue {
-      background: #3b82f6;
-    }
+  const rowIndex = matchedRow.rowIndex;
+  const row = matchedRow.row;
 
-    .swatch-yellow {
-      background: #facc15;
-    }
+  const newStatus = mapActionToStatus_(actionValue);
+  sheet.getRange(rowIndex, col.status + 1).setValue(newStatus);
 
-    .header {
-      text-align: left;
-      font-size: 42px;
-      font-weight: bold;
-      line-height: 1;
-      margin: 0;
-      color: #ffffff;
-      letter-spacing: 1px;
-      white-space: nowrap;
-    }
+  if (doorValue) {
+    sheet.getRange(rowIndex, col.door + 1).setValue(doorValue);
+  }
 
-    .topbar {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
-    }
+  const existingWarehouseUpdate = String(row[col.warehouseUpdate] || "").trim();
+  const updateParts = [];
 
-    .counter {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 10px;
-      text-align: center;
-      border: 1px solid #d9e2ec;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
-    }
+  if (additionalNotesValue) {
+    updateParts.push(additionalNotesValue.trim());
+  }
 
-    .counter-label {
-      font-size: 16px;
-      color: #64748b;
-      font-weight: 700;
-    }
+  if (employeeValue) {
+    updateParts.push(`By ${employeeValue.trim()}`);
+  }
 
-    .counter-value {
-      font-size: 30px;
-      font-weight: bold;
-      line-height: 1.1;
-      color: #0f172a;
-    }
+  updateParts.push(formatTimestamp_(submittedAt));
 
-    .board-view {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-    }
+  const newWarehouseUpdate = updateParts.join(" | ");
 
-    .section {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 12px;
-      min-height: 280px;
-      border: 1px solid #d9e2ec;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
-    }
+  if (newWarehouseUpdate) {
+    const combinedWarehouseUpdate = existingWarehouseUpdate
+      ? `${existingWarehouseUpdate} | ${newWarehouseUpdate}`
+      : newWarehouseUpdate;
 
-    .section h2 {
-      margin: 0 0 10px 0;
-      font-size: 24px;
-      color: #0f172a;
-      text-align: center;
-    }
+    sheet.getRange(rowIndex, col.warehouseUpdate + 1).setValue(combinedWarehouseUpdate);
+  }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+  const actionNorm = normalize_(actionValue);
 
-    td {
-      padding: 8px 6px;
-      font-size: 18px;
-      border-bottom: 1px solid #e5edf5;
-      vertical-align: top;
-      color: #0f172a;
-    }
+  if (actionNorm === "left") {
+    sheet.getRange(rowIndex, col.completedAt + 1).setValue(submittedAt);
 
-    .time-block {
-      line-height: 1.12;
-    }
+    SpreadsheetApp.flush();
 
-    .time-date {
-      display: block;
-      font-size: 22px;
-      color: #0f172a;
-      margin-bottom: 3px;
-      font-weight: 700;
-    }
+    archiveAndDeleteRow_(sheet, archiveSheet, rowIndex);
+  }
 
-    .time-hour {
-      display: block;
-      font-size: 22px;
-      font-weight: bold;
-      color: #0f172a;
-    }
+  updateDropdownsFromSheet();
+}
 
-    .client-main {
-      display: block;
-      font-size: 22px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 2px;
-      line-height: 1.15;
-    }
+function findStrictTodayMatchingRow_(values, col, criteria) {
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
-    .small {
-      display: block;
-      font-size: 16px;
-      color: #1e293b;
-      margin-top: 1px;
-      line-height: 1.2;
-      font-weight: 600;
-    }
+  const submittedClient = normalize_(criteria.clientValue);
+  const submittedRef = normalize_(criteria.refValue);
+  const submittedNote = normalize_(criteria.noteDropdownValue);
 
-    .detail-inline {
-      display: block;
-      font-size: 15px;
-      color: #334155;
-      margin-top: 2px;
-      line-height: 1.2;
-      font-weight: 600;
-      white-space: normal;
-      word-break: break-word;
-    }
+  const candidates = [];
 
-    .detail-inline .ref-inline {
-      font-weight: 700;
-      color: #1e293b;
-    }
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
 
-    .detail-inline .notes-inline {
-      font-style: italic;
-      color: #475569;
-    }
+    const rowDate = parseSheetDate_(row[col.date]);
+    const rowStatus = normalize_(row[col.status]);
+    const rowClient = normalize_(row[col.client]);
+    const rowRef = normalize_(row[col.reference]);
+    const rowNote = normalize_(row[col.notes]);
 
-    .detail-separator {
-      margin: 0 6px;
-      color: #64748b;
-      font-weight: 700;
-    }
+    if (!rowDate) continue;
+    if (rowDate < start || rowDate > end) continue;
+    if (rowStatus === "done" || rowStatus === "complete") continue;
 
-    .temp-dry {
-      color: #dc2626;
-      font-weight: 800;
-    }
+    if (rowClient !== submittedClient) continue;
 
-    .temp-frozen {
-      color: #2563eb;
-      font-weight: 800;
+    // Strict matching rules:
+    // If Ops row has a PO/BL/BK, form must have it and it must match.
+    if (rowRef) {
+      if (!submittedRef) continue;
+      if (rowRef !== submittedRef) continue;
     }
 
-    .footer {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 16px;
-      color: #64748b;
-      font-weight: 700;
+    // If Ops row has Notes, form must have Notes and it must match.
+    if (rowNote) {
+      if (!submittedNote) continue;
+      if (rowNote !== submittedNote) continue;
     }
 
-    .status-loading td {
-      background: #dbeafe !important;
-      color: #1d4ed8 !important;
-      font-weight: 700;
-    }
+    // If form submitted a ref but row has blank ref, do not allow mismatch.
+    if (submittedRef && rowRef && rowRef !== submittedRef) continue;
 
-    .status-unloading td {
-      background: #fff4cc !important;
-      color: #8a5a00 !important;
-      font-weight: 700;
-    }
+    // If form submitted a note but row has blank note, do not allow mismatch.
+    if (submittedNote && rowNote && rowNote !== submittedNote) continue;
 
-    .status-readyforpickup td,
-    .status-ready td {
-      background: #dcfce7 !important;
-      color: #166534 !important;
-      font-weight: 700;
-    }
+    candidates.push({
+      rowIndex: i + 1,
+      row,
+      timeValue: parseTimeMinutes_(row[col.eta])
+    });
+  }
 
-    .status-complete td {
-      color: #94a3b8;
-    }
+  candidates.sort((a, b) => a.timeValue - b.timeValue);
 
-    .status-hold td,
-    .status-problem td {
-      background: #ffd9d9;
-      color: #9f1239;
-      font-weight: bold;
-    }
+  if (candidates.length === 1) return candidates[0];
+  if (candidates.length > 1) {
+    throw new Error(
+      "More than one exact match was found for today. Add more identifying information in the form."
+    );
+  }
 
-    .status-checkedin td,
-    .status-checked-in td {
-      background: #e2e8f0;
-      color: #334155;
-    }
+  return null;
+}
 
-    .late td {
-      background: #fecaca !important;
-      color: #991b1b !important;
-      font-weight: bold;
-    }
+function archiveAndDeleteRow_(opsSheet, archiveSheet, rowIndex) {
+  const lastColumn = opsSheet.getLastColumn();
+  const rowValues = opsSheet.getRange(rowIndex, 1, 1, lastColumn).getValues()[0];
 
-    .footer {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 16px;
-      color: #64748b;
-      font-weight: 700;
-    }
+  const archiveLastCol = archiveSheet.getLastColumn();
+  const targetColCount = Math.max(lastColumn, archiveLastCol);
 
-    .empty-msg {
-      color: #64748b;
-      font-size: 18px;
-      padding: 8px 2px;
-    }
+  if (archiveSheet.getLastRow() === 0) {
+    const headers = opsSheet.getRange(1, 1, 1, lastColumn).getValues();
+    archiveSheet.getRange(1, 1, 1, lastColumn).setValues(headers);
+  }
 
-    @media (max-width: 1400px) {
-      .title-bar {
-        gap: 12px;
-      }
-
-      .legend-box {
-        min-width: 170px;
-        padding: 7px 8px;
-      }
-
-      .legend-item {
-        font-size: 11px;
-      }
-
-      .header {
-        font-size: 36px;
-      }
-    }
+  const paddedRow = padRow_(rowValues, targetColCount);
+  archiveSheet.getRange(archiveSheet.getLastRow() + 1, 1, 1, targetColCount).setValues([paddedRow]);
 
-    @media (min-width: 1600px) {
-      .header {
-        font-size: 46px;
-      }
-
-      .title-logo {
-        width: 74px;
-        height: 74px;
-      }
-
-      .counter-value {
-        font-size: 34px;
-      }
-
-      .time-date,
-      .time-hour,
-      .client-main {
-        font-size: 24px;
-      }
-
-      .small {
-        font-size: 17px;
-      }
-
-      .detail-inline {
-        font-size: 16px;
-      }
-
-      td {
-        font-size: 19px;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <div id="boardWrapper">
-    <div class="title-bar">
-      <div class="title-left">
-        <img src="/logo.png" alt="Frozen Spot Logo" class="title-logo">
-
-        <div class="legend-box">
-          <div class="legend-title">STATUS KEY</div>
-          <div class="legend-grid">
-            <div class="legend-item">
-              <span class="legend-swatch swatch-red"></span>
-              <span>Late / Hold</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch swatch-green"></span>
-              <span>Ready for Pickup</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch swatch-blue"></span>
-              <span>Loading</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch swatch-yellow"></span>
-              <span>Unloading</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="header">FROZEN SPOT OPERATIONS</div>
-    </div>
-
-    <div class="topbar">
-      <div class="counter">
-        <div class="counter-label">Arriving</div>
-        <div id="countArriving" class="counter-value">0</div>
-      </div>
-      <div class="counter">
-        <div class="counter-label">Active Docks</div>
-        <div id="countLoading" class="counter-value">0</div>
-      </div>
-      <div class="counter">
-        <div class="counter-label">Departures</div>
-        <div id="countDepartures" class="counter-value">0</div>
-      </div>
-      <div class="counter">
-        <div class="counter-label">Late / Hold</div>
-        <div id="countLate" class="counter-value">0</div>
-      </div>
-    </div>
-
-    <div id="boardView" class="board-view">
-      <div class="section">
-        <h2>ARRIVING</h2>
-        <table id="arriving"></table>
-      </div>
-
-      <div class="section">
-        <h2>ACTIVE DOCKS</h2>
-        <table id="loading"></table>
-      </div>
-
-      <div class="section">
-        <h2>DEPARTURES</h2>
-        <table id="departures"></table>
-      </div>
-    </div>
-
-    <div class="footer">Warehouse Dashboard – Auto Refresh</div>
-  </div>
-
-  <script>
-    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
-
-    function parseCSV(text) {
-      const rows = [];
-      let row = [];
-      let cell = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const nextChar = text[i + 1];
-
-        if (char === '"') {
-          if (inQuotes && nextChar === '"') {
-            cell += '"';
-            i++;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if (char === ',' && !inQuotes) {
-          row.push(cell);
-          cell = "";
-        } else if ((char === '\n' || char === '\r') && !inQuotes) {
-          if (char === '\r' && nextChar === '\n') i++;
-          row.push(cell);
-          if (row.some(c => c.trim() !== "")) rows.push(row);
-          row = [];
-          cell = "";
-        } else {
-          cell += char;
-        }
-      }
-
-      if (cell.length > 0 || row.length > 0) {
-        row.push(cell);
-        if (row.some(c => c.trim() !== "")) rows.push(row);
-      }
-
-      return rows;
-    }
+  opsSheet.deleteRow(rowIndex);
+}
+
+function padRow_(row, targetLength) {
+  const padded = row.slice();
+  while (padded.length < targetLength) {
+    padded.push("");
+  }
+  return padded;
+}
+
+function updateDropdownsFromSheet() {
+  const form = FormApp.getActiveForm();
+  const sheet = SpreadsheetApp.openById(MAIN_SHEET_ID).getSheetByName(MAIN_TAB_NAME);
+
+  if (!sheet) {
+    throw new Error(`Sheet tab "${MAIN_TAB_NAME}" not found.`);
+  }
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return;
+
+  const headers = data[0];
+  const col = getColumnMap_(headers);
+
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+
+  const refValues = [];
+  const clientValues = [];
+  const noteValues = [];
 
-    function clean(v) {
-      return (v || "").trim();
+  const seenRefs = new Set();
+  const seenClients = new Set();
+  const seenNotes = new Set();
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const rowDate = parseSheetDate_(row[col.date]);
+    const refValue = String(row[col.reference] || "").trim();
+    const clientValue = String(row[col.client] || "").trim();
+    const noteValue = String(row[col.notes] || "").trim();
+    const statusValue = normalize_(row[col.status]);
+
+    if (!rowDate) continue;
+    if (rowDate < start || rowDate > end) continue;
+    if (statusValue === "done" || statusValue === "complete") continue;
+
+    if (refValue && !seenRefs.has(refValue)) {
+      seenRefs.add(refValue);
+      refValues.push(refValue);
     }
 
-    function normalize(v) {
-      return clean(v).toLowerCase().replace(/\s+/g, "");
+    if (clientValue && !seenClients.has(clientValue)) {
+      seenClients.add(clientValue);
+      clientValues.push(clientValue);
     }
 
-    function parseDate(dateStr) {
-      const value = clean(dateStr);
-      const parts = value.split("/");
-      if (parts.length !== 3) return null;
-      return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
+    if (noteValue && !seenNotes.has(noteValue)) {
+      seenNotes.add(noteValue);
+      noteValues.push(noteValue);
     }
+  }
 
-    function parseTimeMinutes(t) {
-      const value = clean(t);
-      if (!value) return 9999;
+  refValues.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+  clientValues.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  noteValues.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
-      const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
-      if (!match) return 9999;
+  updateFormDropdown_(form, "PO / BL / BK", refValues, false);
+  updateFormDropdown_(form, "Client Name", clientValues, true);
+  updateFormDropdown_(form, "Notes", noteValues, false);
+}
 
-      let hour = parseInt(match[1], 10);
-      const minute = parseInt(match[2], 10);
-      const ampm = match[3] ? match[3].toUpperCase() : null;
+function updateFormDropdown_(form, questionTitle, values, required) {
+  const items = form.getItems(FormApp.ItemType.LIST);
+  const dropdown = items.find(item => item.getTitle() === questionTitle);
 
-      if (ampm === "PM" && hour !== 12) hour += 12;
-      if (ampm === "AM" && hour === 12) hour = 0;
+  if (!dropdown) {
+    throw new Error(`Dropdown "${questionTitle}" not found in form.`);
+  }
 
-      return hour * 60 + minute;
-    }
+  const listItem = dropdown.asListItem();
+  listItem.setChoiceValues(values.length ? values : ["No active options found"]);
+  listItem.setRequired(required);
+}
 
-    function formatBoardDate(dateStr) {
-      const d = parseDate(dateStr);
-      if (!d) return clean(dateStr);
-      const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-      return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
-    }
+function mapActionToStatus_(action) {
+  const value = normalize_(action);
 
-    function isLate(dateStr, timeStr, status) {
-      const normalized = normalize(status);
-      if (normalized === "complete" || normalized === "done") return false;
+  if (value === "arrived") return "Unloading";
+  if (value === "unloading") return "Unloading";
+  if (value === "loading") return "Loading";
+  if (value === "readyforpickup") return "Ready for Pickup";
+  if (value === "left") return "Done";
 
-      const rowDate = parseDate(dateStr);
-      if (!rowDate) return false;
+  return action;
+}
 
-      const now = new Date();
-      if (rowDate.toDateString() !== now.toDateString()) return false;
+function getFormAnswers_(e) {
+  const output = {};
+  const itemResponses = e.response.getItemResponses();
 
-      const rowMins = parseTimeMinutes(timeStr);
-      const nowMins = now.getHours() * 60 + now.getMinutes();
+  itemResponses.forEach(itemResponse => {
+    const title = itemResponse.getItem().getTitle();
+    const response = itemResponse.getResponse();
+    output[title] = Array.isArray(response) ? response.join(", ") : String(response || "").trim();
+  });
 
-      return rowMins < nowMins;
-    }
+  return output;
+}
 
-    function getRollingStart(d) {
-      const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      start.setHours(0, 0, 0, 0);
-      return start;
-    }
+function getColumnMap_(headers) {
+  const map = {
+    date: headers.indexOf("Date"),
+    eta: headers.indexOf("ETA"),
+    reference: headers.indexOf("PO / BL# / Booking#"),
+    client: headers.indexOf("Client"),
+    door: headers.indexOf("Door"),
+    status: headers.indexOf("Status"),
+    notes: headers.indexOf("Notes"),
+    completedAt: headers.indexOf("Completed At"),
+    warehouseUpdate: headers.indexOf("Warehouse Update")
+  };
 
-    function getRollingEnd(d) {
-      const end = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      end.setDate(end.getDate() + 7);
-      end.setHours(23, 59, 59, 999);
-      return end;
+  Object.keys(map).forEach(key => {
+    if (map[key] === -1) {
+      throw new Error(`Column "${key}" was not found in Ops sheet headers.`);
     }
+  });
 
-    function isInRollingWeek(dateObj) {
-      if (!dateObj) return false;
-      const now = new Date();
-      const start = getRollingStart(now);
-      const end = getRollingEnd(now);
-      return dateObj >= start && dateObj <= end;
-    }
+  return map;
+}
 
-    function getReferenceLabel(item) {
-      const ref = clean(item.reference);
-      if (!ref) return "";
+function parseSheetDate_(value) {
+  if (!value) return null;
 
-      const cargoType = normalize(item.cargo);
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value)) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
 
-      if (cargoType === "export") return `BK# ${ref}`;
-      if (item.direction === "Arriving") return `PO# ${ref}`;
-      if (item.direction === "Leaving" && cargoType === "storage") return `PO#/BL# ${ref}`;
-      if (item.direction === "Leaving") return `BL# ${ref}`;
-      return ref;
-    }
+  const str = String(value).trim();
+  const parts = str.split("/");
 
-    function formatTemperature(temp) {
-      const value = clean(temp);
-      if (!value) return "";
+  if (parts.length !== 3) return null;
 
-      return escapeHtml(value)
-        .replace(/dry/gi, '<span class="temp-dry">$&</span>')
-        .replace(/frozen/gi, '<span class="temp-frozen">$&</span>');
-    }
+  const month = Number(parts[0]) - 1;
+  const day = Number(parts[1]);
+  const year = Number(parts[2]);
 
-    function shouldApplyLateClass(item) {
-      const norm = item.norm;
-      if (norm.includes("loading")) return false;
-      if (norm.includes("unloading")) return false;
-      if (norm.includes("readyforpickup")) return false;
-      if (norm === "ready") return false;
-      return item.late;
-    }
+  if (isNaN(month) || isNaN(day) || isNaN(year)) return null;
 
-    function createBoardRow(item) {
-      const referenceLabel = getReferenceLabel(item);
-      const combinedParts = [];
-
-      if (referenceLabel) {
-        combinedParts.push(`<span class="ref-inline">${escapeHtml(referenceLabel)}</span>`);
-      }
-
-      if (item.notes) {
-        combinedParts.push(`<span class="notes-inline">${escapeHtml(item.notes)}</span>`);
-      }
-
-      const combinedLine = combinedParts.length
-        ? `<span class="detail-inline">${combinedParts.join('<span class="detail-separator">•</span>')}</span>`
-        : "";
-
-      const lateClass = shouldApplyLateClass(item) ? "late" : "";
-
-      return `
-        <tr class="status-${item.norm} ${lateClass}">
-          <td>
-            <div class="time-block">
-              <span class="time-date">${escapeHtml(formatBoardDate(item.date))}</span>
-              <span class="time-hour">${escapeHtml(item.eta || "")}</span>
-            </div>
-          </td>
-          <td>
-            <span class="client-main">${escapeHtml(item.client || "Unknown")}</span>
-            <span class="small">${escapeHtml(item.container || "")}</span>
-            <span class="small">${escapeHtml(item.cargo || "")} • ${escapeHtml(item.country || "")} • ${formatTemperature(item.temp || "")}</span>
-            ${combinedLine}
-          </td>
-          <td>Door ${escapeHtml(item.door || "-")}</td>
-        </tr>
-      `;
-    }
+  return new Date(year, month, day);
+}
 
-    function addEmptyMessage(tableId, message) {
-      const el = document.getElementById(tableId);
-      if (!el.innerHTML.trim()) {
-        el.innerHTML = `<tr><td colspan="3"><div class="empty-msg">${escapeHtml(message)}</div></td></tr>`;
-      }
-    }
+function parseTimeMinutes_(value) {
+  const str = String(value || "").trim();
+  if (!str) return 9999;
 
-    function escapeHtml(str) {
-      return String(str || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
+  const match = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
+  if (!match) return 9999;
+
+  let hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2], 10);
+  const ampm = match[3] ? match[3].toUpperCase() : null;
+
+  if (ampm === "PM" && hour !== 12) hour += 12;
+  if (ampm === "AM" && hour === 12) hour = 0;
+
+  return hour * 60 + minute;
+}
+
+function normalize_(value) {
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, "");
+}
 
-    fetch(url)
-      .then(r => r.text())
-      .then(text => {
-        const rows = parseCSV(text);
-        rows.shift();
-
-        const arriving = [];
-        const loading = [];
-        const departures = [];
-
-        let lateCount = 0;
-
-        rows.forEach(r => {
-          const date = clean(r[1]);
-          const eta = clean(r[2]);
-          const direction = clean(r[3]);
-          const cargo = clean(r[4]);
-          const country = clean(r[5]);
-          const container = clean(r[6]);
-          const reference = clean(r[7]);
-          const client = clean(r[8]);
-          const temp = clean(r[9]);
-          const door = clean(r[10]);
-          const status = clean(r[11]);
-          const notes = clean(r[14] || r[12]);
-
-          if (!date && !eta && !direction && !container && !client) return;
-          if (normalize(status) === "done" || normalize(status) === "complete") return;
-
-          const parsedDate = parseDate(date);
-          const norm = normalize(status);
-          const late = isLate(date, eta, status) || norm.includes("hold") || norm.includes("problem");
-
-          if (late) lateCount++;
-
-          const item = {
-            date,
-            eta,
-            direction,
-            cargo,
-            country,
-            container,
-            reference,
-            client,
-            temp,
-            door,
-            status,
-            notes,
-            norm,
-            late,
-            parsedDate,
-            sortDate: parsedDate ? parsedDate.getTime() : Number.MAX_SAFE_INTEGER,
-            sortTime: parseTimeMinutes(eta)
-          };
-
-          if (isInRollingWeek(parsedDate)) {
-            if (direction === "Arriving") arriving.push(item);
-            if (direction === "Leaving") departures.push(item);
-            if (norm.includes("loading") || norm.includes("unloading") || norm.includes("ready")) loading.push(item);
-          }
-        });
-
-        const sorter = (a, b) => {
-          if (a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
-          return a.sortTime - b.sortTime;
-        };
-
-        arriving.sort(sorter);
-        loading.sort(sorter);
-        departures.sort(sorter);
-
-        arriving.forEach(item => {
-          document.getElementById("arriving").insertAdjacentHTML("beforeend", createBoardRow(item));
-        });
-
-        loading.forEach(item => {
-          document.getElementById("loading").insertAdjacentHTML("beforeend", createBoardRow(item));
-        });
-
-        departures.forEach(item => {
-          document.getElementById("departures").insertAdjacentHTML("beforeend", createBoardRow(item));
-        });
-
-        addEmptyMessage("arriving", "No arrivals in rolling week");
-        addEmptyMessage("loading", "No active docks in rolling week");
-        addEmptyMessage("departures", "No departures in rolling week");
-
-        document.getElementById("countArriving").textContent = arriving.length;
-        document.getElementById("countLoading").textContent = loading.length;
-        document.getElementById("countDepartures").textContent = departures.length;
-        document.getElementById("countLate").textContent = lateCount;
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById("arriving").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Could not load dashboard data</div></td></tr>`;
-        document.getElementById("loading").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Check published CSV link</div></td></tr>`;
-        document.getElementById("departures").innerHTML = `<tr><td colspan="3"><div class="empty-msg">See browser console for details</div></td></tr>`;
-      });
-
-    setTimeout(() => location.reload(), 60000);
-  </script>
-</body>
-</html>
+function formatTimestamp_(date) {
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), "M/d/yyyy h:mm a");
+}
