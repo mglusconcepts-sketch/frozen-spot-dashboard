@@ -1,362 +1,119 @@
-const MAIN_SHEET_ID = "1cWbF4ZNVOEwoPKTAx4LlSr3Dq5X3tgbigRCkBNOahGw";
-const MAIN_TAB_NAME = "Ops";
-const ARCHIVE_TAB_NAME = "Archive";
+<!DOCTYPE html>
 
-function onFormSubmit(e) {
-  const answers = getFormAnswers_(e);
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Frozen Spot Dashboard</title>
 
-  const refValue = answers["PO / BL / BK"] || "";
-  const clientValue = answers["Client Name"] || "";
-  const actionValue = answers["Action"] || "";
-  const doorValue = answers["Door"] || "";
-  const noteDropdownValue = answers["Notes"] || "";
-  const additionalNotesValue = answers["Additional Notes"] || "";
-  const employeeValue = answers["Employee Name / Initials"] || "";
-  const submittedAt = new Date();
+<style>
+body { font-family: Arial; margin:0; background:#eef3f9; }
 
-  if (!clientValue) {
-    throw new Error("Client Name is required.");
-  }
-
-  if (!actionValue) {
-    throw new Error("Action is required.");
-  }
-
-  const ss = SpreadsheetApp.openById(MAIN_SHEET_ID);
-  const sheet = ss.getSheetByName(MAIN_TAB_NAME);
-  const archiveSheet = ss.getSheetByName(ARCHIVE_TAB_NAME);
-
-  if (!sheet) {
-    throw new Error(`Sheet tab "${MAIN_TAB_NAME}" not found.`);
-  }
-
-  if (!archiveSheet) {
-    throw new Error(`Archive tab "${ARCHIVE_TAB_NAME}" not found.`);
-  }
-
-  const range = sheet.getDataRange();
-  const values = range.getValues();
-
-  if (values.length < 2) {
-    throw new Error("Ops sheet has no data rows.");
-  }
-
-  const headers = values[0];
-  const col = getColumnMap_(headers);
-
-  const matchedRow = findStrictTodayMatchingRow_(values, col, {
-    refValue,
-    clientValue,
-    noteDropdownValue
-  });
-
-  if (!matchedRow) {
-    throw new Error(
-      "No exact matching row found for today. If the load has PO / BL / BK and Notes in Ops, both must be selected in the form."
-    );
-  }
-
-  const rowIndex = matchedRow.rowIndex;
-  const row = matchedRow.row;
-
-  const newStatus = mapActionToStatus_(actionValue);
-  sheet.getRange(rowIndex, col.status + 1).setValue(newStatus);
-
-  if (doorValue) {
-    sheet.getRange(rowIndex, col.door + 1).setValue(doorValue);
-  }
-
-  const existingWarehouseUpdate = String(row[col.warehouseUpdate] || "").trim();
-  const updateParts = [];
-
-  if (additionalNotesValue) {
-    updateParts.push(additionalNotesValue.trim());
-  }
-
-  if (employeeValue) {
-    updateParts.push(`By ${employeeValue.trim()}`);
-  }
-
-  updateParts.push(formatTimestamp_(submittedAt));
-
-  const newWarehouseUpdate = updateParts.join(" | ");
-
-  if (newWarehouseUpdate) {
-    const combinedWarehouseUpdate = existingWarehouseUpdate
-      ? `${existingWarehouseUpdate} | ${newWarehouseUpdate}`
-      : newWarehouseUpdate;
-
-    sheet.getRange(rowIndex, col.warehouseUpdate + 1).setValue(combinedWarehouseUpdate);
-  }
-
-  const actionNorm = normalize_(actionValue);
-
-  if (actionNorm === "left") {
-    sheet.getRange(rowIndex, col.completedAt + 1).setValue(submittedAt);
-
-    SpreadsheetApp.flush();
-
-    archiveAndDeleteRow_(sheet, archiveSheet, rowIndex);
-  }
-
-  updateDropdownsFromSheet();
+.header {
+  background:#0b1220;
+  color:white;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 }
 
-function findStrictTodayMatchingRow_(values, col, criteria) {
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
-
-  const submittedClient = normalize_(criteria.clientValue);
-  const submittedRef = normalize_(criteria.refValue);
-  const submittedNote = normalize_(criteria.noteDropdownValue);
-
-  const candidates = [];
-
-  for (let i = 1; i < values.length; i++) {
-    const row = values[i];
-
-    const rowDate = parseSheetDate_(row[col.date]);
-    const rowStatus = normalize_(row[col.status]);
-    const rowClient = normalize_(row[col.client]);
-    const rowRef = normalize_(row[col.reference]);
-    const rowNote = normalize_(row[col.notes]);
-
-    if (!rowDate) continue;
-    if (rowDate < start || rowDate > end) continue;
-    if (rowStatus === "done" || rowStatus === "complete") continue;
-
-    if (rowClient !== submittedClient) continue;
-
-    // Strict matching rules:
-    // If Ops row has a PO/BL/BK, form must have it and it must match.
-    if (rowRef) {
-      if (!submittedRef) continue;
-      if (rowRef !== submittedRef) continue;
-    }
-
-    // If Ops row has Notes, form must have Notes and it must match.
-    if (rowNote) {
-      if (!submittedNote) continue;
-      if (rowNote !== submittedNote) continue;
-    }
-
-    // If form submitted a ref but row has blank ref, do not allow mismatch.
-    if (submittedRef && rowRef && rowRef !== submittedRef) continue;
-
-    // If form submitted a note but row has blank note, do not allow mismatch.
-    if (submittedNote && rowNote && rowNote !== submittedNote) continue;
-
-    candidates.push({
-      rowIndex: i + 1,
-      row,
-      timeValue: parseTimeMinutes_(row[col.eta])
-    });
-  }
-
-  candidates.sort((a, b) => a.timeValue - b.timeValue);
-
-  if (candidates.length === 1) return candidates[0];
-  if (candidates.length > 1) {
-    throw new Error(
-      "More than one exact match was found for today. Add more identifying information in the form."
-    );
-  }
-
-  return null;
+.legend span {
+  display:inline-block;
+  width:12px;
+  height:12px;
+  margin-right:6px;
 }
 
-function archiveAndDeleteRow_(opsSheet, archiveSheet, rowIndex) {
-  const lastColumn = opsSheet.getLastColumn();
-  const rowValues = opsSheet.getRange(rowIndex, 1, 1, lastColumn).getValues()[0];
+.red{background:#ef4444;}
+.green{background:#22c55e;}
+.blue{background:#3b82f6;}
+.yellow{background:#facc15;}
 
-  const archiveLastCol = archiveSheet.getLastColumn();
-  const targetColCount = Math.max(lastColumn, archiveLastCol);
-
-  if (archiveSheet.getLastRow() === 0) {
-    const headers = opsSheet.getRange(1, 1, 1, lastColumn).getValues();
-    archiveSheet.getRange(1, 1, 1, lastColumn).setValues(headers);
-  }
-
-  const paddedRow = padRow_(rowValues, targetColCount);
-  archiveSheet.getRange(archiveSheet.getLastRow() + 1, 1, 1, targetColCount).setValues([paddedRow]);
-
-  opsSheet.deleteRow(rowIndex);
+.section {
+  background:white;
+  margin:10px;
+  padding:10px;
+  border-radius:10px;
 }
 
-function padRow_(row, targetLength) {
-  const padded = row.slice();
-  while (padded.length < targetLength) {
-    padded.push("");
-  }
-  return padded;
-}
+table { width:100%; }
+td { padding:6px; border-bottom:1px solid #ddd; }
 
-function updateDropdownsFromSheet() {
-  const form = FormApp.getActiveForm();
-  const sheet = SpreadsheetApp.openById(MAIN_SHEET_ID).getSheetByName(MAIN_TAB_NAME);
+.loading td{ background:#dbeafe;}
+.unloading td{ background:#fff4cc;}
+.ready td{ background:#dcfce7;}
+.late td{ background:#fecaca;}
 
-  if (!sheet) {
-    throw new Error(`Sheet tab "${MAIN_TAB_NAME}" not found.`);
-  }
+.temp-dry{ color:red; font-weight:bold;}
+.temp-frozen{ color:blue; font-weight:bold;}
+</style>
 
-  const data = sheet.getDataRange().getValues();
-  if (data.length < 2) return;
+</head>
 
-  const headers = data[0];
-  const col = getColumnMap_(headers);
+<body>
+
+<div class="header">
+  <h2>FROZEN SPOT OPERATIONS</h2>
+  <div class="legend">
+    <span class="red"></span>Late
+    <span class="green"></span>Ready
+    <span class="blue"></span>Loading
+    <span class="yellow"></span>Unloading
+  </div>
+</div>
+
+<div class="section">
+  <h3>Dashboard</h3>
+  <table id="data"></table>
+</div>
+
+<script>
+
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
+
+fetch(url)
+.then(r=>r.text())
+.then(text=>{
+  const rows = text.split("\n").map(r=>r.split(","));
+  rows.shift();
+
+  let html="";
 
   const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+  const end = new Date();
+  end.setDate(today.getDate()+7);
 
-  const refValues = [];
-  const clientValues = [];
-  const noteValues = [];
+  rows.forEach(r=>{
+    const date = new Date(r[1]);
+    if(date<today || date>end) return;
 
-  const seenRefs = new Set();
-  const seenClients = new Set();
-  const seenNotes = new Set();
+    let status = (r[11]||"").toLowerCase();
 
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const rowDate = parseSheetDate_(row[col.date]);
-    const refValue = String(row[col.reference] || "").trim();
-    const clientValue = String(row[col.client] || "").trim();
-    const noteValue = String(row[col.notes] || "").trim();
-    const statusValue = normalize_(row[col.status]);
+    let cls="";
+    if(status.includes("loading")) cls="loading";
+    else if(status.includes("unloading")) cls="unloading";
+    else if(status.includes("ready")) cls="ready";
+    else if(status.includes("hold")) cls="late";
 
-    if (!rowDate) continue;
-    if (rowDate < start || rowDate > end) continue;
-    if (statusValue === "done" || statusValue === "complete") continue;
+    let temp = r[9];
+    if(temp=="Dry") temp='<span class="temp-dry">Dry</span>';
+    if(temp=="Frozen") temp='<span class="temp-frozen">Frozen</span>';
 
-    if (refValue && !seenRefs.has(refValue)) {
-      seenRefs.add(refValue);
-      refValues.push(refValue);
-    }
-
-    if (clientValue && !seenClients.has(clientValue)) {
-      seenClients.add(clientValue);
-      clientValues.push(clientValue);
-    }
-
-    if (noteValue && !seenNotes.has(noteValue)) {
-      seenNotes.add(noteValue);
-      noteValues.push(noteValue);
-    }
-  }
-
-  refValues.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
-  clientValues.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
-  noteValues.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
-
-  updateFormDropdown_(form, "PO / BL / BK", refValues, false);
-  updateFormDropdown_(form, "Client Name", clientValues, true);
-  updateFormDropdown_(form, "Notes", noteValues, false);
-}
-
-function updateFormDropdown_(form, questionTitle, values, required) {
-  const items = form.getItems(FormApp.ItemType.LIST);
-  const dropdown = items.find(item => item.getTitle() === questionTitle);
-
-  if (!dropdown) {
-    throw new Error(`Dropdown "${questionTitle}" not found in form.`);
-  }
-
-  const listItem = dropdown.asListItem();
-  listItem.setChoiceValues(values.length ? values : ["No active options found"]);
-  listItem.setRequired(required);
-}
-
-function mapActionToStatus_(action) {
-  const value = normalize_(action);
-
-  if (value === "arrived") return "Unloading";
-  if (value === "unloading") return "Unloading";
-  if (value === "loading") return "Loading";
-  if (value === "readyforpickup") return "Ready for Pickup";
-  if (value === "left") return "Done";
-
-  return action;
-}
-
-function getFormAnswers_(e) {
-  const output = {};
-  const itemResponses = e.response.getItemResponses();
-
-  itemResponses.forEach(itemResponse => {
-    const title = itemResponse.getItem().getTitle();
-    const response = itemResponse.getResponse();
-    output[title] = Array.isArray(response) ? response.join(", ") : String(response || "").trim();
+    html+=`
+    <tr class="${cls}">
+      <td>${r[1]} ${r[2]}</td>
+      <td><b>${r[8]}</b><br>${r[4]} • ${r[5]} • ${temp}</td>
+      <td>${r[7]} ${r[12]}</td>
+      <td>Door ${r[10]}</td>
+    </tr>`;
   });
 
-  return output;
-}
+  document.getElementById("data").innerHTML = html;
+});
 
-function getColumnMap_(headers) {
-  const map = {
-    date: headers.indexOf("Date"),
-    eta: headers.indexOf("ETA"),
-    reference: headers.indexOf("PO / BL# / Booking#"),
-    client: headers.indexOf("Client"),
-    door: headers.indexOf("Door"),
-    status: headers.indexOf("Status"),
-    notes: headers.indexOf("Notes"),
-    completedAt: headers.indexOf("Completed At"),
-    warehouseUpdate: headers.indexOf("Warehouse Update")
-  };
+setInterval(()=>location.reload(),60000);
 
-  Object.keys(map).forEach(key => {
-    if (map[key] === -1) {
-      throw new Error(`Column "${key}" was not found in Ops sheet headers.`);
-    }
-  });
+</script>
 
-  return map;
-}
-
-function parseSheetDate_(value) {
-  if (!value) return null;
-
-  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value)) {
-    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-  }
-
-  const str = String(value).trim();
-  const parts = str.split("/");
-
-  if (parts.length !== 3) return null;
-
-  const month = Number(parts[0]) - 1;
-  const day = Number(parts[1]);
-  const year = Number(parts[2]);
-
-  if (isNaN(month) || isNaN(day) || isNaN(year)) return null;
-
-  return new Date(year, month, day);
-}
-
-function parseTimeMinutes_(value) {
-  const str = String(value || "").trim();
-  if (!str) return 9999;
-
-  const match = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
-  if (!match) return 9999;
-
-  let hour = parseInt(match[1], 10);
-  const minute = parseInt(match[2], 10);
-  const ampm = match[3] ? match[3].toUpperCase() : null;
-
-  if (ampm === "PM" && hour !== 12) hour += 12;
-  if (ampm === "AM" && hour === 12) hour = 0;
-
-  return hour * 60 + minute;
-}
-
-function normalize_(value) {
-  return String(value || "").trim().toLowerCase().replace(/\s+/g, "");
-}
-
-function formatTimestamp_(date) {
-  return Utilities.formatDate(date, Session.getScriptTimeZone(), "M/d/yyyy h:mm a");
-}
+</body>
+</html>
