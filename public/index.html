@@ -1,119 +1,709 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Frozen Spot Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frozen Spot Operations</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #eef3f9;
+      color: #0f172a;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      height: 100%;
+    }
 
-<style>
-body { font-family: Arial; margin:0; background:#eef3f9; }
+    body {
+      box-sizing: border-box;
+      padding: 12px 14px;
+    }
 
-.header {
-  background:#0b1220;
-  color:white;
-  padding:15px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
+    .title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 4px 0 12px 0;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #0b1220, #163d77 50%, #0b1220);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
 
-.legend span {
-  display:inline-block;
-  width:12px;
-  height:12px;
-  margin-right:6px;
-}
+    .title-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+      flex-shrink: 0;
+    }
 
-.red{background:#ef4444;}
-.green{background:#22c55e;}
-.blue{background:#3b82f6;}
-.yellow{background:#facc15;}
+    .title-logo {
+      width: 66px;
+      height: 66px;
+      object-fit: contain;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 5px;
+      flex: 0 0 auto;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    }
 
-.section {
-  background:white;
-  margin:10px;
-  padding:10px;
-  border-radius:10px;
-}
+    .legend-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 8px 10px;
+      min-width: 195px;
+    }
 
-table { width:100%; }
-td { padding:6px; border-bottom:1px solid #ddd; }
+    .legend-title {
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
 
-.loading td{ background:#dbeafe;}
-.unloading td{ background:#fff4cc;}
-.ready td{ background:#dcfce7;}
-.late td{ background:#fecaca;}
+    .legend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 10px;
+    }
 
-.temp-dry{ color:red; font-weight:bold;}
-.temp-frozen{ color:blue; font-weight:bold;}
-</style>
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
 
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      flex-shrink: 0;
+    }
+
+    .swatch-red { background: #ef4444; }
+    .swatch-green { background: #22c55e; }
+    .swatch-blue { background: #3b82f6; }
+    .swatch-yellow { background: #facc15; }
+
+    .header {
+      text-align: left;
+      font-size: 42px;
+      font-weight: bold;
+      line-height: 1;
+      margin: 0;
+      color: #ffffff;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .counter {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #d9e2ec;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .counter-label {
+      font-size: 16px;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .counter-value {
+      font-size: 30px;
+      font-weight: bold;
+      line-height: 1.1;
+      color: #0f172a;
+    }
+
+    .board-view {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 280px;
+      border: 1px solid #d9e2ec;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .section h2 {
+      margin: 0 0 10px 0;
+      font-size: 24px;
+      color: #0f172a;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 8px 6px;
+      font-size: 18px;
+      border-bottom: 1px solid #e5edf5;
+      vertical-align: top;
+      color: #0f172a;
+    }
+
+    .time-block {
+      line-height: 1.12;
+    }
+
+    .time-date {
+      display: block;
+      font-size: 22px;
+      color: #0f172a;
+      margin-bottom: 3px;
+      font-weight: 700;
+    }
+
+    .time-hour {
+      display: block;
+      font-size: 22px;
+      font-weight: bold;
+      color: #0f172a;
+    }
+
+    .client-main {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 2px;
+      line-height: 1.15;
+    }
+
+    .small {
+      display: block;
+      font-size: 16px;
+      color: #1e293b;
+      margin-top: 1px;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    .detail-inline {
+      display: block;
+      font-size: 15px;
+      color: #334155;
+      margin-top: 2px;
+      line-height: 1.2;
+      font-weight: 600;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .detail-inline .ref-inline {
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .detail-inline .notes-inline {
+      font-style: italic;
+      color: #475569;
+    }
+
+    .detail-separator {
+      margin: 0 6px;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .temp-dry {
+      color: #dc2626;
+      font-weight: 800;
+    }
+
+    .temp-frozen {
+      color: #2563eb;
+      font-weight: 800;
+    }
+
+    .status-loading td {
+      background: #dbeafe !important;
+      color: #1d4ed8 !important;
+      font-weight: 700;
+    }
+
+    .status-unloading td {
+      background: #fff4cc !important;
+      color: #8a5a00 !important;
+      font-weight: 700;
+    }
+
+    .status-readyforpickup td,
+    .status-ready td {
+      background: #dcfce7 !important;
+      color: #166534 !important;
+      font-weight: 700;
+    }
+
+    .status-complete td {
+      color: #94a3b8;
+    }
+
+    .status-hold td,
+    .status-problem td {
+      background: #ffd9d9;
+      color: #9f1239;
+      font-weight: bold;
+    }
+
+    .status-checkedin td,
+    .status-checked-in td {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .late td {
+      background: #fecaca !important;
+      color: #991b1b !important;
+      font-weight: bold;
+    }
+
+    .empty-msg {
+      color: #64748b;
+      font-size: 18px;
+      padding: 8px 2px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 16px;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1400px) {
+      .title-bar { gap: 12px; }
+      .legend-box {
+        min-width: 170px;
+        padding: 7px 8px;
+      }
+      .legend-item { font-size: 11px; }
+      .header { font-size: 36px; }
+    }
+
+    @media (min-width: 1600px) {
+      .header { font-size: 46px; }
+      .title-logo {
+        width: 74px;
+        height: 74px;
+      }
+      .counter-value { font-size: 34px; }
+      .time-date,
+      .time-hour,
+      .client-main { font-size: 24px; }
+      .small { font-size: 17px; }
+      .detail-inline { font-size: 16px; }
+      td { font-size: 19px; }
+    }
+  </style>
 </head>
-
 <body>
+  <div id="boardWrapper">
+    <div class="title-bar">
+      <div class="title-left">
+        <img src="/logo.png" alt="Frozen Spot Logo" class="title-logo">
 
-<div class="header">
-  <h2>FROZEN SPOT OPERATIONS</h2>
-  <div class="legend">
-    <span class="red"></span>Late
-    <span class="green"></span>Ready
-    <span class="blue"></span>Loading
-    <span class="yellow"></span>Unloading
+        <div class="legend-box">
+          <div class="legend-title">STATUS KEY</div>
+          <div class="legend-grid">
+            <div class="legend-item">
+              <span class="legend-swatch swatch-red"></span>
+              <span>Late / Hold</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch swatch-green"></span>
+              <span>Ready for Pickup</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch swatch-blue"></span>
+              <span>Loading</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch swatch-yellow"></span>
+              <span>Unloading</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header">FROZEN SPOT OPERATIONS</div>
+    </div>
+
+    <div class="topbar">
+      <div class="counter">
+        <div class="counter-label">Arriving</div>
+        <div id="countArriving" class="counter-value">0</div>
+      </div>
+      <div class="counter">
+        <div class="counter-label">Active Docks</div>
+        <div id="countLoading" class="counter-value">0</div>
+      </div>
+      <div class="counter">
+        <div class="counter-label">Departures</div>
+        <div id="countDepartures" class="counter-value">0</div>
+      </div>
+      <div class="counter">
+        <div class="counter-label">Late / Hold</div>
+        <div id="countLate" class="counter-value">0</div>
+      </div>
+    </div>
+
+    <div id="boardView" class="board-view">
+      <div class="section">
+        <h2>ARRIVING</h2>
+        <table id="arriving"></table>
+      </div>
+
+      <div class="section">
+        <h2>ACTIVE DOCKS</h2>
+        <table id="loading"></table>
+      </div>
+
+      <div class="section">
+        <h2>DEPARTURES</h2>
+        <table id="departures"></table>
+      </div>
+    </div>
+
+    <div class="footer">Warehouse Dashboard – Auto Refresh</div>
   </div>
-</div>
 
-<div class="section">
-  <h3>Dashboard</h3>
-  <table id="data"></table>
-</div>
+  <script>
+    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
 
-<script>
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
 
-const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnxm662nS0LeYmimnNz1l7EPkJ3NXfRb55aiMjfzrb1S7kP8lxIpp3k6EDJom8fpLdjYNIgXbGU2NP/pub?gid=0&single=true&output=csv";
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
 
-fetch(url)
-.then(r=>r.text())
-.then(text=>{
-  const rows = text.split("\n").map(r=>r.split(","));
-  rows.shift();
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            cell += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          row.push(cell);
+          cell = "";
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && nextChar === '\n') i++;
+          row.push(cell);
+          if (row.some(c => c.trim() !== "")) rows.push(row);
+          row = [];
+          cell = "";
+        } else {
+          cell += char;
+        }
+      }
 
-  let html="";
+      if (cell.length > 0 || row.length > 0) {
+        row.push(cell);
+        if (row.some(c => c.trim() !== "")) rows.push(row);
+      }
 
-  const today = new Date();
-  const end = new Date();
-  end.setDate(today.getDate()+7);
+      return rows;
+    }
 
-  rows.forEach(r=>{
-    const date = new Date(r[1]);
-    if(date<today || date>end) return;
+    function clean(v) {
+      return (v || "").trim();
+    }
 
-    let status = (r[11]||"").toLowerCase();
+    function normalize(v) {
+      return clean(v).toLowerCase().replace(/\s+/g, "");
+    }
 
-    let cls="";
-    if(status.includes("loading")) cls="loading";
-    else if(status.includes("unloading")) cls="unloading";
-    else if(status.includes("ready")) cls="ready";
-    else if(status.includes("hold")) cls="late";
+    function parseDate(dateStr) {
+      const value = clean(dateStr);
+      const parts = value.split("/");
+      if (parts.length !== 3) return null;
+      return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
+    }
 
-    let temp = r[9];
-    if(temp=="Dry") temp='<span class="temp-dry">Dry</span>';
-    if(temp=="Frozen") temp='<span class="temp-frozen">Frozen</span>';
+    function parseTimeMinutes(t) {
+      const value = clean(t);
+      if (!value) return 9999;
 
-    html+=`
-    <tr class="${cls}">
-      <td>${r[1]} ${r[2]}</td>
-      <td><b>${r[8]}</b><br>${r[4]} • ${r[5]} • ${temp}</td>
-      <td>${r[7]} ${r[12]}</td>
-      <td>Door ${r[10]}</td>
-    </tr>`;
-  });
+      const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
+      if (!match) return 9999;
 
-  document.getElementById("data").innerHTML = html;
-});
+      let hour = parseInt(match[1], 10);
+      const minute = parseInt(match[2], 10);
+      const ampm = match[3] ? match[3].toUpperCase() : null;
 
-setInterval(()=>location.reload(),60000);
+      if (ampm === "PM" && hour !== 12) hour += 12;
+      if (ampm === "AM" && hour === 12) hour = 0;
 
-</script>
+      return hour * 60 + minute;
+    }
 
+    function formatBoardDate(dateStr) {
+      const d = parseDate(dateStr);
+      if (!d) return clean(dateStr);
+      const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+    }
+
+    function isLate(dateStr, timeStr, status) {
+      const normalized = normalize(status);
+      if (normalized === "complete" || normalized === "done") return false;
+
+      const rowDate = parseDate(dateStr);
+      if (!rowDate) return false;
+
+      const now = new Date();
+      if (rowDate.toDateString() !== now.toDateString()) return false;
+
+      const rowMins = parseTimeMinutes(timeStr);
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+
+      return rowMins < nowMins;
+    }
+
+    function getRollingStart(d) {
+      const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      start.setHours(0, 0, 0, 0);
+      return start;
+    }
+
+    function getRollingEnd(d) {
+      const end = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      end.setDate(end.getDate() + 7);
+      end.setHours(23, 59, 59, 999);
+      return end;
+    }
+
+    function isInRollingWeek(dateObj) {
+      if (!dateObj) return false;
+      const now = new Date();
+      const start = getRollingStart(now);
+      const end = getRollingEnd(now);
+      return dateObj >= start && dateObj <= end;
+    }
+
+    function getReferenceLabel(item) {
+      const ref = clean(item.reference);
+      if (!ref) return "";
+
+      const cargoType = normalize(item.cargo);
+
+      if (cargoType === "export") return `BK# ${ref}`;
+      if (item.direction === "Arriving") return `PO# ${ref}`;
+      if (item.direction === "Leaving" && cargoType === "storage") return `PO#/BL# ${ref}`;
+      if (item.direction === "Leaving") return `BL# ${ref}`;
+      return ref;
+    }
+
+    function formatTemperature(temp) {
+      const value = clean(temp);
+      if (!value) return "";
+
+      return escapeHtml(value)
+        .replace(/dry/gi, '<span class="temp-dry">$&</span>')
+        .replace(/frozen/gi, '<span class="temp-frozen">$&</span>');
+    }
+
+    function shouldApplyLateClass(item) {
+      const norm = item.norm;
+      if (norm.includes("loading")) return false;
+      if (norm.includes("unloading")) return false;
+      if (norm.includes("readyforpickup")) return false;
+      if (norm === "ready") return false;
+      return item.late;
+    }
+
+    function createBoardRow(item) {
+      const referenceLabel = getReferenceLabel(item);
+      const combinedParts = [];
+
+      if (referenceLabel) {
+        combinedParts.push(`<span class="ref-inline">${escapeHtml(referenceLabel)}</span>`);
+      }
+
+      if (item.notes) {
+        combinedParts.push(`<span class="notes-inline">${escapeHtml(item.notes)}</span>`);
+      }
+
+      const combinedLine = combinedParts.length
+        ? `<span class="detail-inline">${combinedParts.join('<span class="detail-separator">•</span>')}</span>`
+        : "";
+
+      const lateClass = shouldApplyLateClass(item) ? "late" : "";
+
+      return `
+        <tr class="status-${item.norm} ${lateClass}">
+          <td>
+            <div class="time-block">
+              <span class="time-date">${escapeHtml(formatBoardDate(item.date))}</span>
+              <span class="time-hour">${escapeHtml(item.eta || "")}</span>
+            </div>
+          </td>
+          <td>
+            <span class="client-main">${escapeHtml(item.client || "Unknown")}</span>
+            <span class="small">${escapeHtml(item.container || "")}</span>
+            <span class="small">${escapeHtml(item.cargo || "")} • ${escapeHtml(item.country || "")} • ${formatTemperature(item.temp || "")}</span>
+            ${combinedLine}
+          </td>
+          <td>Door ${escapeHtml(item.door || "-")}</td>
+        </tr>
+      `;
+    }
+
+    function addEmptyMessage(tableId, message) {
+      const el = document.getElementById(tableId);
+      if (!el.innerHTML.trim()) {
+        el.innerHTML = `<tr><td colspan="3"><div class="empty-msg">${escapeHtml(message)}</div></td></tr>`;
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    fetch(url)
+      .then(r => r.text())
+      .then(text => {
+        const rows = parseCSV(text);
+        rows.shift();
+
+        const arriving = [];
+        const loading = [];
+        const departures = [];
+
+        let lateCount = 0;
+
+        rows.forEach(r => {
+          const date = clean(r[1]);
+          const eta = clean(r[2]);
+          const direction = clean(r[3]);
+          const cargo = clean(r[4]);
+          const country = clean(r[5]);
+          const container = clean(r[6]);
+          const reference = clean(r[7]);
+          const client = clean(r[8]);
+          const temp = clean(r[9]);
+          const door = clean(r[10]);
+          const status = clean(r[11]);
+          const notes = clean(r[12]);
+
+          if (!date && !eta && !direction && !container && !client) return;
+          if (normalize(status) === "done" || normalize(status) === "complete") return;
+
+          const parsedDate = parseDate(date);
+          const norm = normalize(status);
+          const late = isLate(date, eta, status) || norm.includes("hold") || norm.includes("problem");
+
+          if (late) lateCount++;
+
+          const item = {
+            date,
+            eta,
+            direction,
+            cargo,
+            country,
+            container,
+            reference,
+            client,
+            temp,
+            door,
+            status,
+            notes,
+            norm,
+            late,
+            parsedDate,
+            sortDate: parsedDate ? parsedDate.getTime() : Number.MAX_SAFE_INTEGER,
+            sortTime: parseTimeMinutes(eta)
+          };
+
+          if (isInRollingWeek(parsedDate)) {
+            if (direction === "Arriving") arriving.push(item);
+            if (direction === "Leaving") departures.push(item);
+            if (norm.includes("loading") || norm.includes("unloading") || norm.includes("ready")) loading.push(item);
+          }
+        });
+
+        const sorter = (a, b) => {
+          if (a.sortDate !== b.sortDate) return a.sortDate - b.sortDate;
+          return a.sortTime - b.sortTime;
+        };
+
+        arriving.sort(sorter);
+        loading.sort(sorter);
+        departures.sort(sorter);
+
+        arriving.forEach(item => {
+          document.getElementById("arriving").insertAdjacentHTML("beforeend", createBoardRow(item));
+        });
+
+        loading.forEach(item => {
+          document.getElementById("loading").insertAdjacentHTML("beforeend", createBoardRow(item));
+        });
+
+        departures.forEach(item => {
+          document.getElementById("departures").insertAdjacentHTML("beforeend", createBoardRow(item));
+        });
+
+        addEmptyMessage("arriving", "No arrivals in rolling week");
+        addEmptyMessage("loading", "No active docks in rolling week");
+        addEmptyMessage("departures", "No departures in rolling week");
+
+        document.getElementById("countArriving").textContent = arriving.length;
+        document.getElementById("countLoading").textContent = loading.length;
+        document.getElementById("countDepartures").textContent = departures.length;
+        document.getElementById("countLate").textContent = lateCount;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("arriving").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Could not load dashboard data</div></td></tr>`;
+        document.getElementById("loading").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Check published CSV link</div></td></tr>`;
+        document.getElementById("departures").innerHTML = `<tr><td colspan="3"><div class="empty-msg">See browser console for details</div></td></tr>`;
+      });
+
+    setTimeout(() => location.reload(), 60000);
+  </script>
 </body>
 </html>
