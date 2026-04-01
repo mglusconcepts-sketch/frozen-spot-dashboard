@@ -413,8 +413,8 @@
 
     <div class="topbar">
       <div class="counter">
-        <div class="counter-label">Arriving</div>
-        <div id="countArriving" class="counter-value">0</div>
+        <div class="counter-label">Receiving</div>
+        <div id="countReceiving" class="counter-value">0</div>
       </div>
       <div class="counter">
         <div class="counter-label">Active Docks</div>
@@ -432,8 +432,8 @@
 
     <div id="boardView" class="board-view">
       <div class="section">
-        <h2>ARRIVING</h2>
-        <table id="arriving"></table>
+        <h2>Receiving</h2>
+        <table id="Receiving"></table>
       </div>
 
       <div class="section">
@@ -575,9 +575,9 @@
       const cargoType = normalize(item.cargo);
 
       if (cargoType === "export") return `BK# ${ref}`;
-      if (item.direction === "Arriving") return `PO# ${ref}`;
-      if (item.direction === "Leaving" && cargoType === "storage") return `PO#/BL# ${ref}`;
-      if (item.direction === "Leaving") return `BL# ${ref}`;
+      if (item.direction === "Receiving") return `PO# ${ref}`;
+      if (item.direction === "Dispatching" && cargoType === "storage") return `PO#/BL# ${ref}`;
+      if (item.direction === "Dispatching") return `BL# ${ref}`;
       return ref;
     }
 
@@ -669,7 +669,7 @@
         const rows = parseCSV(text);
         rows.shift();
 
-        const arriving = [];
+        const arrived = [];
         const loading = [];
         const departures = [];
 
@@ -724,8 +724,8 @@
           }
 
           if (isInRollingWeek(parsedDate)) {
-            if (direction === "Arriving") arriving.push(item);
-            if (direction === "Leaving") departures.push(item);
+            if (direction === "Receiving") arriving.push(item);
+            if (direction === "Dispatching") departures.push(item);
           }
         });
 
@@ -734,11 +734,11 @@
           return a.sortTime - b.sortTime;
         };
 
-        arriving.sort(sorter);
+        Receiving.sort(sorter);
         loading.sort(sorter);
         departures.sort(sorter);
 
-        arriving.forEach(item => {
+        Receiving.forEach(item => {
           document.getElementById("arriving").insertAdjacentHTML("beforeend", createBoardRow(item));
         });
 
@@ -750,11 +750,11 @@
           document.getElementById("departures").insertAdjacentHTML("beforeend", createBoardRow(item));
         });
 
-        addEmptyMessage("arriving", "No arrivals in rolling week");
+        addEmptyMessage("Receiving", "No arrivals in rolling week");
         addEmptyMessage("loading", "No active docks");
         addEmptyMessage("departures", "No departures in rolling week");
 
-        document.getElementById("countArriving").textContent = arriving.length;
+        document.getElementById("countReceiving").textContent = arriving.length;
         document.getElementById("countLoading").textContent = loading.length;
         document.getElementById("countDepartures").textContent = departures.length;
         document.getElementById("countLate").textContent = lateCount;
