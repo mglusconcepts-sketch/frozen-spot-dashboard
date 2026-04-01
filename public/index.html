@@ -724,7 +724,7 @@
           }
 
           if (isInRollingWeek(parsedDate)) {
-            if (direction === "Receiving") arriving.push(item);
+            if (direction === "Receiving") Receiving.push(item);
             if (direction === "Dispatching") departures.push(item);
           }
         });
@@ -739,7 +739,7 @@
         departures.sort(sorter);
 
         Receiving.forEach(item => {
-          document.getElementById("arriving").insertAdjacentHTML("beforeend", createBoardRow(item));
+          document.getElementById("Receiving").insertAdjacentHTML("beforeend", createBoardRow(item));
         });
 
         loading.forEach(item => {
@@ -754,14 +754,14 @@
         addEmptyMessage("loading", "No active docks");
         addEmptyMessage("departures", "No departures in rolling week");
 
-        document.getElementById("countReceiving").textContent = arriving.length;
+        document.getElementById("countReceiving").textContent = receiving.length;
         document.getElementById("countLoading").textContent = loading.length;
         document.getElementById("countDepartures").textContent = departures.length;
         document.getElementById("countLate").textContent = lateCount;
       })
       .catch(err => {
         console.error(err);
-        document.getElementById("arriving").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Could not load dashboard data</div></td></tr>`;
+        document.getElementById("receiving").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Could not load dashboard data</div></td></tr>`;
         document.getElementById("loading").innerHTML = `<tr><td colspan="3"><div class="empty-msg">Check published CSV link</div></td></tr>`;
         document.getElementById("departures").innerHTML = `<tr><td colspan="3"><div class="empty-msg">See browser console for details</div></td></tr>`;
       });
