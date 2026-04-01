@@ -96,6 +96,7 @@
     .swatch-blue { background: #3b82f6; }
     .swatch-yellow { background: #fde047; }
     .swatch-arrived { background: #fb923c; }
+    .swatch-hold { background: #fecaca; }
 
     .header {
       text-align: right;
@@ -271,11 +272,16 @@
       font-weight: 700;
     }
 
-    .status-hold td,
+    .status-hold td {
+      background: #fecaca !important;
+      color: #991b1b !important;
+      font-weight: 700;
+    }
+
     .status-problem td {
-      background: #ffd9d9;
-      color: #9f1239;
-      font-weight: bold;
+      background: #ffd9d9 !important;
+      color: #9f1239 !important;
+      font-weight: 700;
     }
 
     .late td {
@@ -376,7 +382,8 @@
 
       <div class="legend-wide">
         <div class="legend-title">STATUS KEY</div>
-        <div class="legend-item"><span class="legend-swatch swatch-red"></span><span>Late / Hold</span></div>
+        <div class="legend-item"><span class="legend-swatch swatch-red"></span><span>Late</span></div>
+        <div class="legend-item"><span class="legend-swatch swatch-hold"></span><span>Hold</span></div>
         <div class="legend-item"><span class="legend-swatch swatch-arrived"></span><span>Arrived</span></div>
         <div class="legend-item"><span class="legend-swatch swatch-green"></span><span>Ready for Pickup</span></div>
         <div class="legend-item"><span class="legend-swatch swatch-blue"></span><span>Loading</span></div>
@@ -387,10 +394,22 @@
     </div>
 
     <div class="topbar">
-      <div class="counter"><div class="counter-label">Receiving</div><div id="countReceiving" class="counter-value">0</div></div>
-      <div class="counter"><div class="counter-label">Active Docks</div><div id="countLoading" class="counter-value">0</div></div>
-      <div class="counter"><div class="counter-label">Dispatching</div><div id="countDispatching" class="counter-value">0</div></div>
-      <div class="counter"><div class="counter-label">Late / Hold</div><div id="countLate" class="counter-value">0</div></div>
+      <div class="counter">
+        <div class="counter-label">Receiving</div>
+        <div id="countReceiving" class="counter-value">0</div>
+      </div>
+      <div class="counter">
+        <div class="counter-label">Active Docks</div>
+        <div id="countLoading" class="counter-value">0</div>
+      </div>
+      <div class="counter">
+        <div class="counter-label">Dispatching</div>
+        <div id="countDispatching" class="counter-value">0</div>
+      </div>
+      <div class="counter">
+        <div class="counter-label">Late / Hold</div>
+        <div id="countLate" class="counter-value">0</div>
+      </div>
     </div>
 
     <div id="boardView" class="board-view">
@@ -560,6 +579,7 @@
       if (norm.includes("unloading")) return false;
       if (norm.includes("readyforpickup")) return false;
       if (norm.includes("arrived")) return false;
+      if (norm.includes("hold")) return false;
       if (norm === "ready") return false;
       return item.late;
     }
@@ -623,6 +643,7 @@
         norm.includes("loading") ||
         norm.includes("unloading") ||
         norm.includes("readyforpickup") ||
+        norm.includes("hold") ||
         norm === "ready"
       );
     }
@@ -658,12 +679,26 @@
 
           const parsedDate = parseDate(date);
           const norm = normalize(status);
-          const late = isLate(date, eta, status) || norm.includes("hold") || norm.includes("problem");
+          const late = isLate(date, eta, status);
 
-          if (late) lateCount++;
+          if (late || norm.includes("hold")) lateCount++;
 
           const item = {
-            date, eta, direction, cargo, country, container, reference, client, temp, door, status, notes, norm, late, parsedDate,
+            date,
+            eta,
+            direction,
+            cargo,
+            country,
+            container,
+            reference,
+            client,
+            temp,
+            door,
+            status,
+            notes,
+            norm,
+            late,
+            parsedDate,
             sortDate: parsedDate ? parsedDate.getTime() : Number.MAX_SAFE_INTEGER,
             sortTime: parseTimeMinutes(eta)
           };
@@ -688,9 +723,17 @@
         loading.sort(sorter);
         dispatching.sort(sorter);
 
-        receiving.forEach(item => document.getElementById("receiving").insertAdjacentHTML("beforeend", createBoardRow(item)));
-        loading.forEach(item => document.getElementById("loading").insertAdjacentHTML("beforeend", createBoardRow(item)));
-        dispatching.forEach(item => document.getElementById("dispatching").insertAdjacentHTML("beforeend", createBoardRow(item)));
+        receiving.forEach(item => {
+          document.getElementById("receiving").insertAdjacentHTML("beforeend", createBoardRow(item));
+        });
+
+        loading.forEach(item => {
+          document.getElementById("loading").insertAdjacentHTML("beforeend", createBoardRow(item));
+        });
+
+        dispatching.forEach(item => {
+          document.getElementById("dispatching").insertAdjacentHTML("beforeend", createBoardRow(item));
+        });
 
         addEmptyMessage("receiving", "No receiving in rolling week");
         addEmptyMessage("loading", "No active docks");
